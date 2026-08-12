@@ -1,0 +1,69 @@
+<div class="card border-0 rounded-4 shadow-sm bg-white p-4 p-md-5 mb-4">
+    <!-- Gallery Section -->
+    <div class="mb-5">
+        <h5 class="fw-extrabold text-dark mb-4"><i class="bi bi-images text-primary me-2"></i>Event Photo Gallery</h5>
+        
+        <div class="row g-3">
+            {% for img in gallery_images %}
+                <div class="col-6 col-sm-4">
+                    <div class="position-relative overflow-hidden rounded-4 border ratio ratio-4x3 group shadow-sm">
+                        <img src="{{ img.image.url }}" class="object-fit-cover w-100 h-100 transition" alt="{{ img.caption }}">
+                        {% if img.caption %}
+                            <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-75 p-2 text-white extra-small text-truncate">
+                                {{ img.caption }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="text-center py-5 border border-dashed rounded-4 text-muted">
+                        <i class="bi bi-camera display-6 opacity-25 d-block mb-3"></i>
+                        <span class="small">No gallery photos added yet</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Attachments Section -->
+    <div>
+        <h5 class="fw-extrabold text-dark mb-4"><i class="bi bi-paperclip text-primary me-2"></i>Downloads & Attachments</h5>
+        
+        <div class="d-flex flex-column gap-2">
+            {% for item in attachments %}
+                <div class="d-flex align-items-center justify-content-between p-3 rounded-4 border bg-light bg-opacity-25">
+                    <div class="d-flex align-items-center gap-3 overflow-hidden me-3">
+                        <div class="rounded-3 bg-white border shadow-sm d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; flex-shrink: 0;">
+                            <i class="bi {% if 'pdf' in item.file_type|lower %}bi-file-earmark-pdf-fill text-danger{% elif 'zip' in item.file_type|lower or 'tar' in item.file_type|lower %}bi-file-earmark-zip-fill text-warning{% elif 'xls' in item.file_type|lower or 'csv' in item.file_type|lower %}bi-file-earmark-excel-fill text-success{% else %}bi-file-earmark-arrow-down-fill text-primary{% endif %} fs-4"></i>
+                        </div>
+                        <div class="overflow-hidden">
+                            <span class="fw-bold text-dark small text-truncate d-block">{{ item.name }}</span>
+                            <span class="text-muted extra-small d-block">
+                                {{ item.file_type|upper }} • {{ item.file_size|filesizeformat }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <a href="{{ item.file.url }}" download class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1.5 fw-bold extra-small" title="Download file">
+                        <i class="bi bi-download me-1"></i> Download
+                    </a>
+                </div>
+            {% empty %}
+                <div class="text-center py-5 border border-dashed rounded-4 text-muted">
+                    <i class="bi bi-file-earmark-arrow-down display-6 opacity-25 d-block mb-3"></i>
+                    <span class="small">No attachments uploaded for download</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition {
+        transition: transform 0.3s ease;
+    }
+    .group:hover .transition {
+        transform: scale(1.05);
+    }
+</style>

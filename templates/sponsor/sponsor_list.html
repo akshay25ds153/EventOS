@@ -1,0 +1,105 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Sponsor List | EventSphere{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">Sponsors</li>
+{% endblock %}
+
+{% block content %}
+<!-- Page Title -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Sponsors & Partners</h3>
+        <p class="text-muted small mb-0">Manage corporate partners, financing resources, and event branding sponsors.</p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if request.user.is_staff or request.user.profile.role == 'admin' or request.user.profile.role == 'organizer' %}
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold small shadow-sm dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-download me-1"></i> Export
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="exportDropdown">
+                <li><button class="dropdown-item py-2 small" onclick="exportData('csv', this)"><i class="bi bi-filetype-csv me-2 text-success"></i> Excel/CSV</button></li>
+                <li><button class="dropdown-item py-2 small" onclick="exportData('pdf', this)"><i class="bi bi-file-pdf me-2 text-danger"></i> PDF Document</button></li>
+            </ul>
+        </div>
+        {% endif %}
+        {% if request.user.is_staff %}
+        <a href="{% url 'create_sponsor' %}" class="btn btn-dark rounded-pill px-4 py-2 fw-bold small shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i> Register Sponsor
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Grid Card Layout -->
+<div class="row g-3">
+    {% for sponsor in sponsors %}
+        <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="card border-0 rounded-4 shadow-sm bg-white h-100 d-flex flex-column justify-content-between overflow-hidden">
+                <div class="p-4 text-center">
+                    <!-- Sponsor Logo -->
+                    {% if sponsor.logo %}
+                        <img src="{{ sponsor.logo.url }}" class="img-fluid mb-3 rounded" style="max-height: 70px; object-fit: contain;" alt="{{ sponsor.name }}">
+                    {% else %}
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3 mx-auto" style="width: 70px; height: 70px;">
+                            <i class="bi bi-award-fill text-muted fs-3"></i>
+                        </div>
+                    {% endif %}
+
+                    <h5 class="fw-bold text-dark mb-1">{{ sponsor.name }}</h5>
+                    
+                    {% if sponsor.description %}
+                        <p class="text-muted extra-small mb-3 text-truncate-2">{{ sponsor.description }}</p>
+                    {% endif %}
+
+                    <div class="text-start bg-light rounded-3 p-3 mb-3" style="font-size: 0.78rem;">
+                        {% if sponsor.contact_person %}
+                            <div class="mb-1 text-dark"><strong>Contact:</strong> {{ sponsor.contact_person }}</div>
+                        {% endif %}
+                        {% if sponsor.phone %}
+                            <div class="mb-1 text-muted"><i class="bi bi-telephone me-1"></i>{{ sponsor.phone }}</div>
+                        {% endif %}
+                        {% if sponsor.email %}
+                            <div class="text-muted text-truncate"><i class="bi bi-envelope me-1"></i>{{ sponsor.email }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Footer Action Buttons -->
+                <div class="p-3 border-top d-flex align-items-center justify-content-between bg-light">
+                    {% if sponsor.website %}
+                        <a href="{{ sponsor.website }}" target="_blank" class="btn btn-sm btn-outline-dark rounded-pill px-3 fw-bold extra-small">
+                            <i class="bi bi-link-45deg me-1"></i> Website
+                        </a>
+                    {% else %}
+                        <span class="text-muted extra-small">No website</span>
+                    {% endif %}
+
+                    {% if request.user.is_staff %}
+                    <div class="d-flex align-items-center gap-1">
+                        <a href="{% url 'edit_sponsor' sponsor.id %}" class="btn btn-sm btn-light border rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 32px; height: 32px;" title="Edit Sponsor">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'delete_sponsor' sponsor.id %}" class="btn btn-sm btn-light border rounded-circle d-flex align-items-center justify-content-center text-danger" style="width: 32px; height: 32px;" title="Delete Sponsor">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="card text-center py-5 border-0 rounded-4 bg-white shadow-sm">
+                <div class="card-body">
+                    <i class="bi bi-award fs-1 d-block mb-3 text-muted" style="opacity: 0.5;"></i>
+                    <p class="text-muted small">No sponsors registered yet. Click "Register Sponsor" to add one!</p>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Registration Success | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'event_list' %}">Events</a></li>
+<li class="breadcrumb-item active" aria-current="page">Success</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card-aether-white shadow-lg border-0 text-center p-5 rounded-4 position-relative overflow-hidden">
+            <!-- Animated Success Ring -->
+            <div class="mb-4 d-inline-flex align-items-center justify-content-center bg-success-subtle text-success rounded-circle" style="width: 80px; height: 80px; animation: pulse 2s infinite;">
+                <i class="bi bi-patch-check-fill fs-1"></i>
+            </div>
+            
+            <h2 class="fw-extrabold text-dark mb-2">Registration Confirmed!</h2>
+            <p class="text-muted mb-4">You are successfully registered for the event. Your ticket has been generated below.</p>
+            
+            <!-- Virtual Ticket Display -->
+            <div class="border rounded-3 p-4 bg-light text-start mb-4 position-relative" style="border-style: dashed !important;">
+                <!-- Left/Right Ticket Notch cuts -->
+                <div class="position-absolute bg-white rounded-circle" style="width: 20px; height: 20px; left: -10px; top: 50%; transform: translateY(-50%); border-right: 1px solid #dee2e6;"></div>
+                <div class="position-absolute bg-white rounded-circle" style="width: 20px; height: 20px; right: -10px; top: 50%; transform: translateY(-50%); border-left: 1px solid #dee2e6;"></div>
+                
+                <div class="row align-items-center">
+                    <div class="col-sm-8">
+                        <span class="badge bg-dark rounded-pill px-3 py-1 extra-small fw-bold mb-2">EventOS TICKET</span>
+                        <h4 class="fw-extrabold text-dark mb-3">{{ event.name }}</h4>
+                        
+                        <div class="row g-2 extra-small text-muted">
+                            <div class="col-6">
+                                <span class="d-block text-uppercase fw-bold text-dark">Attendee</span>
+                                <span>{{ member.name }}</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="d-block text-uppercase fw-bold text-dark">Reg No</span>
+                                <span>{{ member.registration_number }}</span>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <span class="d-block text-uppercase fw-bold text-dark">Date</span>
+                                <span>{{ event.start_date }}</span>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <span class="d-block text-uppercase fw-bold text-dark">Venue</span>
+                                <span>{{ event.venue.name|default:"TBD" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4 text-center mt-3 mt-sm-0 border-start-sm">
+                        {% if ticket.qr_code %}
+                            <img src="{{ ticket.qr_code.url }}" alt="Ticket QR" class="img-fluid rounded border p-1 bg-white mb-2" style="max-width: 120px;">
+                        {% endif %}
+                        <span class="d-block extra-small text-muted font-monospace">{{ ticket.ticket_number }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                <a href="{% url 'download_ticket_pdf' ticket.uuid %}" class="btn btn-dark rounded-pill px-4 py-2.5 fw-bold shadow-sm d-inline-flex align-items-center justify-content-center">
+                    <i class="bi bi-file-earmark-pdf-fill me-2"></i> Download PDF Ticket
+                </a>
+                <a href="{% url 'event_details' event.id %}" class="btn btn-outline-secondary rounded-pill px-4 py-2.5 fw-bold">
+                    Back to Event
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.4); }
+    70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(25, 135, 84, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+}
+@media (min-width: 576px) {
+    .border-start-sm { border-left: 1px solid #dee2e6 !important; }
+}
+</style>
+{% endblock %}

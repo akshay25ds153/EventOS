@@ -1,0 +1,122 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Ticket Details | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item">
+    {% if request.user.is_staff %}
+        <a href="{% url 'ticket_list' %}">Tickets</a>
+    {% else %}
+        <a href="{% url 'joined_events' %}">My Tickets</a>
+    {% endif %}
+</li>
+<li class="breadcrumb-item active" aria-current="page">Details</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-5">
+    <div class="col-md-9 col-lg-8">
+        <div class="card-aether-white p-5 rounded-4 shadow-lg border-0 overflow-hidden position-relative">
+            <!-- Ticket notch cut aesthetics -->
+            <div class="position-absolute bg-light rounded-circle" style="width: 24px; height: 24px; left: -12px; top: 60%; transform: translateY(-50%); border-right: 1px solid #dee2e6;"></div>
+            <div class="position-absolute bg-light rounded-circle" style="width: 24px; height: 24px; right: -12px; top: 60%; transform: translateY(-50%); border-left: 1px solid #dee2e6;"></div>
+            
+            <div class="row g-4 align-items-center">
+                <!-- Left: Info Details -->
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="badge {% if ticket.status == 'Active' %}bg-success-subtle text-success{% elif ticket.status == 'Used' %}bg-primary-subtle text-primary{% else %}bg-danger-subtle text-danger{% endif %} rounded-pill px-3 py-1 fw-bold extra-small">
+                            {{ ticket.status }}
+                        </span>
+                        <span class="text-muted extra-small font-monospace">{{ ticket.ticket_number }}</span>
+                    </div>
+                    
+                    <h2 class="fw-extrabold text-dark mb-4">{{ ticket.event.name }}</h2>
+                    
+                    <div class="row g-3 mb-4 text-start">
+                        <div class="col-12 col-sm-6">
+                            <span class="d-block text-uppercase fw-bold text-muted extra-small">Attendee Name</span>
+                            <span class="fw-bold text-dark">{{ ticket.member.name }}</span>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <span class="d-block text-uppercase fw-bold text-muted extra-small">Registration ID</span>
+                            <span class="fw-bold text-dark">{{ ticket.member.registration_number|default:"N/A" }}</span>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <span class="d-block text-uppercase fw-bold text-muted extra-small">Email Address</span>
+                            <span class="text-dark text-break">{{ ticket.member.email }}</span>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <span class="d-block text-uppercase fw-bold text-muted extra-small">Role / Badge</span>
+                            <span class="text-dark">{{ ticket.member.role }}</span>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <span class="d-block text-uppercase fw-bold text-muted extra-small">Event Venue</span>
+                            <span class="text-dark text-break">{{ ticket.event.venue.name|default:"TBD" }}</span>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <span class="d-block text-uppercase fw-bold text-muted extra-small">Event Time</span>
+                            <span class="text-dark">{{ ticket.event.start_date }} @ {{ ticket.event.start_time }}</span>
+                        </div>
+
+                    </div>
+                </div>
+                
+                <!-- Right: QR Code Visualizer -->
+                <div class="col-md-4 text-center border-start-md ps-md-4">
+                    <div class="p-3 bg-white rounded border d-inline-block mb-3 shadow-sm">
+                        {% if ticket.qr_code %}
+                            <img src="{{ ticket.qr_code.url }}" alt="Ticket QR" class="img-fluid rounded" style="max-width: 160px;">
+                        {% else %}
+                            <div class="d-flex align-items-center justify-content-center text-muted" style="width: 160px; height: 160px;">
+                                <i class="bi bi-qr-code fs-1"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <span class="d-block text-muted extra-small mb-1">Ticket UUID</span>
+                    <span class="d-block font-monospace text-dark extra-small text-truncate" style="max-width: 180px; margin: 0 auto;" title="{{ ticket.uuid }}">{{ ticket.uuid }}</span>
+                </div>
+            </div>
+            
+            <!-- Horizontal Divider Line -->
+            <div class="border-top my-4" style="border-style: dashed !important;"></div>
+            
+            <!-- Bottom Action Row -->
+            <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center">
+                <div class="text-muted extra-small">
+                    <i class="bi bi-info-circle me-1"></i> Issued on: {{ ticket.issue_date|date:"F d, Y @ h:i A" }}
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'download_ticket_pdf' ticket.uuid %}" class="btn btn-dark rounded-pill px-4 py-2 fw-bold small shadow-sm">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Download PDF
+                    </a>
+                    {% if request.user.is_staff %}
+                    <a href="{% url 'edit_member' ticket.member.id %}" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold small">
+                        Edit Registration
+                    </a>
+                    {% endif %}
+                    {% if is_manager and ticket.status == 'Used' %}
+                    <form action="{% url 'reset_ticket_checkin' ticket.uuid %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger rounded-pill px-4 py-2 fw-bold small">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Check-in
+                        </button>
+                    </form>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media (min-width: 768px) {
+    .border-start-md {
+        border-left: 1px dashed #dee2e6 !important;
+    }
+}
+</style>
+{% endblock %}

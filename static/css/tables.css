@@ -1,0 +1,144 @@
+/* ==========================================================================
+   TABLE DESIGN & SPACING
+   ========================================================================== */
+
+.table-responsive {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background-color: #FFFFFF;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+    overflow: hidden;
+}
+
+.table {
+    margin-bottom: 0;
+    width: 100%;
+}
+
+.table th {
+    font-weight: 600;
+    color: #475569;
+    background-color: #F8FAFC;
+    border-bottom: 1.5px solid var(--border-color);
+    padding: 0.875rem 1.25rem;
+    font-size: 0.775rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    vertical-align: middle;
+}
+
+.table td {
+    padding: 1rem 1.25rem;
+    vertical-align: middle;
+    color: #1F2937;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.875rem;
+}
+
+.table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #F1F5F9;
+}
+
+/* ==========================================================================
+   STICKY HEADERS
+   ========================================================================== */
+
+.table-sticky-wrapper {
+    max-height: 480px;
+    overflow-y: auto;
+}
+
+.table-sticky-wrapper table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #F8FAFC;
+    box-shadow: inset 0 -2px 0 var(--border-color);
+}
+
+/* ==========================================================================
+   TABLE ASSETS & IMAGES
+   ========================================================================== */
+
+.table-img-category {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: #F1F5F9;
+}
+
+.table-img-banner {
+    width: 72px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: #F1F5F9;
+}
+
+.table-img-avatar {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-color);
+}
+
+/* ==========================================================================
+   PAGINATION DESIGN
+   ========================================================================== */
+
+.pagination-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1.25rem;
+    padding-bottom: 0.5rem;
+}
+
+.pagination {
+    margin-bottom: 0;
+    gap: 0.25rem;
+}
+
+.page-link {
+    border-radius: 6px !important;
+    padding: 0.375rem 0.75rem;
+    color: #4B5563;
+    border: 1px solid var(--border-color);
+    background-color: #FFFFFF;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.page-link:hover {
+    background-color: #F1F5F9;
+    color: #1F2937;
+    border-color: #CBD5E1;
+    text-decoration: none;
+}
+
+.page-item.active .page-link {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #FFFFFF !important;
+}
+
+.page-item.disabled .page-link {
+    background-color: #F8FAFC;
+    color: #94A3B8;
+    border-color: var(--border-color);
+    pointer-events: none;
+}
+
+.pagination-info {
+    font-size: 0.825rem;
+    color: #6B7280;
+}

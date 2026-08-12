@@ -1,0 +1,176 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Categories | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">Categories</li>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h3 class="fw-extrabold text-dark mb-1">Categories</h3>
+        <p class="text-muted small mb-0">Manage event classifications, priority levels, and active status.</p>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <!-- View Switcher -->
+        <div class="btn-group rounded-pill p-1 bg-light border" role="group" aria-label="View Switcher">
+            <button type="button" class="btn btn-sm rounded-pill px-3 py-1 fw-bold extra-small active" id="btnGridView" onclick="switchView('grid')">
+                <i class="bi bi-grid-3x3-gap-fill me-1"></i> Grid
+            </button>
+            <button type="button" class="btn btn-sm rounded-pill px-3 py-1 fw-bold extra-small text-muted" id="btnTableView" onclick="switchView('table')">
+                <i class="bi bi-list-ul me-1"></i> Table
+            </button>
+        </div>
+        {% if request.user.is_staff or request.user.profile.role == 'admin' or request.user.profile.role == 'organizer' %}
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold small shadow-sm dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-download me-1"></i> Export
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="exportDropdown">
+                <li><button class="dropdown-item py-2 small" onclick="exportData('csv', this)"><i class="bi bi-filetype-csv me-2 text-success"></i> Excel/CSV</button></li>
+                <li><button class="dropdown-item py-2 small" onclick="exportData('pdf', this)"><i class="bi bi-file-pdf me-2 text-danger"></i> PDF Document</button></li>
+            </ul>
+        </div>
+        {% endif %}
+        {% if request.user.is_staff %}
+        <a href="{% url 'create_category' %}" class="btn btn-dark rounded-pill px-4 py-2 fw-bold small shadow-sm">
+            <i class="bi bi-folder-plus me-1"></i> Create Category
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Category Grid View -->
+<div id="categoriesGridView" class="row g-4 mb-4">
+    {% for category in categories %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card-aether-white h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <!-- Code Badge & Header Action -->
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span class="badge bg-light text-dark border rounded-pill px-3 py-1 extra-small fw-semibold">
+                            <code>{{ category.code }}</code>
+                        </span>
+                        <a href="{% url 'category_details' category.id %}" class="btn-circle-arrow" title="View Category Details">
+                            <i class="bi bi-arrow-up-right"></i>
+                        </a>
+                    </div>
+                    
+                    <h5 class="fw-extrabold text-dark mb-1">
+                        <a href="{% url 'category_details' category.id %}" class="text-dark text-decoration-none">{{ category.name }}</a>
+                    </h5>
+                    <p class="text-muted extra-small mb-3 text-truncate" style="max-height: 2.8em; white-space: normal;">
+                        {{ category.description|default:"No description provided for this category." }}
+                    </p>
+
+                    <!-- Metrics Container -->
+                    <div class="row g-2 mb-3 p-3 rounded-4" style="background-color: var(--bs-tertiary-bg, #F8FAFC); border: 1px solid var(--bs-border-color, #F1F5F9);">
+                        <div class="col-6">
+                            <span class="text-muted extra-small d-block fw-bold text-uppercase">Priority</span>
+                            <span class="badge {% if category.priority == 'High' %}bg-danger-subtle text-danger{% elif category.priority == 'Medium' %}bg-warning-subtle text-warning{% else %}bg-info-subtle text-info{% endif %} rounded-pill px-2.5 py-1 extra-small fw-bold mt-1">
+                                {{ category.priority }}
+                            </span>
+                        </div>
+                        <div class="col-6 text-end">
+                            <span class="text-muted extra-small d-block fw-bold text-uppercase">Status</span>
+                            <span class="badge {% if category.status == 'Active' %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %} rounded-pill px-2.5 py-1 extra-small fw-bold mt-1">
+                                ● {{ category.status }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-3">
+                    <a href="{% url 'category_details' category.id %}" class="btn btn-sm btn-dark rounded-pill px-3 py-1.5 fw-bold extra-small">
+                        <i class="bi bi-eye me-1"></i> Details
+                    </a>
+                    {% if request.user.is_staff %}
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="{% url 'edit_category' category.id %}" class="btn btn-sm btn-light rounded-circle text-primary" style="width: 32px; height: 32px;" title="Edit Category">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'delete_category' category.id %}" class="btn btn-sm btn-light rounded-circle text-danger" style="width: 32px; height: 32px;" title="Delete Category">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="card-aether-white text-center py-5">
+                <i class="bi bi-folder2-open fs-1 text-muted d-block mb-2"></i>
+                <h6 class="fw-bold text-dark">No Categories Found</h6>
+                <p class="text-muted extra-small mb-3">Event classification categories haven't been created yet.</p>
+                {% if request.user.is_staff %}
+                <a href="{% url 'create_category' %}" class="btn btn-dark rounded-pill px-4 btn-sm fw-bold">Create First Category</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Category Table View -->
+<div id="categoriesTableView" class="card-aether-white d-none mb-4">
+    <div class="table-responsive">
+        <table class="table align-middle border-0 mb-0">
+            <thead>
+                <tr class="text-muted extra-small text-uppercase border-bottom">
+                    <th class="border-0 pb-3">Code</th>
+                    <th class="border-0 pb-3">Category Name</th>
+                    <th class="border-0 pb-3">Description</th>
+                    <th class="border-0 pb-3">Priority</th>
+                    <th class="border-0 pb-3">Status</th>
+                    <th class="border-0 pb-3 text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                    <tr class="border-bottom-0">
+                        <td class="py-3"><code>{{ category.code }}</code></td>
+                        <td class="py-3 fw-bold text-dark">
+                            <a href="{% url 'category_details' category.id %}" class="text-dark text-decoration-none">{{ category.name }}</a>
+                        </td>
+                        <td class="py-3 text-muted extra-small text-truncate" style="max-width: 250px;">{{ category.description|default:"-" }}</td>
+                        <td class="py-3">
+                            <span class="badge {% if category.priority == 'High' %}bg-danger-subtle text-danger{% elif category.priority == 'Medium' %}bg-warning-subtle text-warning{% else %}bg-info-subtle text-info{% endif %} rounded-pill px-3 py-1 extra-small fw-bold">
+                                {{ category.priority }}
+                            </span>
+                        </td>
+                        <td class="py-3">
+                            <span class="badge {% if category.status == 'Active' %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %} rounded-pill px-3 py-1 extra-small fw-bold">
+                                ● {{ category.status }}
+                            </span>
+                        </td>
+                        <td class="py-3 text-end">
+                            <div class="d-flex align-items-center justify-content-end gap-1">
+                                <a href="{% url 'category_details' category.id %}" class="btn btn-sm btn-light rounded-circle" style="width: 32px; height: 32px;" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if request.user.is_staff %}
+                                <a href="{% url 'edit_category' category.id %}" class="btn btn-sm btn-light rounded-circle text-primary" style="width: 32px; height: 32px;" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'delete_category' category.id %}" class="btn btn-sm btn-light rounded-circle text-danger" style="width: 32px; height: 32px;" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted small">No categories registered in the database.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

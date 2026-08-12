@@ -1,0 +1,90 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ announcement.title }} | Announcements | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'announcement_list' %}">Announcements</a></li>
+<li class="breadcrumb-item active" aria-current="page">Details</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card-aether-white p-4 p-md-5">
+            <!-- Header Roster Details -->
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="badge bg-light text-dark border rounded-pill px-3 py-1.5 fw-semibold small">
+                        <i class="bi bi-people me-1"></i>Target: {{ announcement.get_audience_display }}
+                    </span>
+                    {% if announcement.event %}
+                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1.5 fw-bold small">
+                        <i class="bi bi-calendar-event me-1"></i>Event: {{ announcement.event.name }}
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    {% if not announcement.is_active %}
+                    <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1.5 fw-bold small">Archived</span>
+                    {% else %}
+                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1.5 fw-bold small">Active</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Title -->
+            <h2 class="fw-extrabold text-dark mb-3" style="font-size: 2.25rem;">{{ announcement.title }}</h2>
+
+            <!-- Metainfo row -->
+            <div class="d-flex align-items-center gap-3 text-muted small mb-4 pb-4 border-bottom">
+                <div class="d-flex align-items-center gap-1.5">
+                    <i class="bi bi-person-circle"></i>
+                    <span>Posted by <strong>{% if announcement.created_by %}{{ announcement.created_by.first_name|default:announcement.created_by.username|capfirst }}{% else %}System{% endif %}</strong></span>
+
+                </div>
+                <div>•</div>
+                <div class="d-flex align-items-center gap-1.5">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>{{ announcement.created_at|date:"M d, Y" }} at {{ announcement.created_at|date:"H:i" }}</span>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="announcement-body text-dark mb-5" style="white-space: pre-wrap; line-height: 1.75; font-size: 1.05rem;">
+                {{ announcement.content }}
+            </div>
+
+            <!-- Action buttons -->
+            <div class="d-flex align-items-center justify-content-between pt-4 border-top">
+                <a href="{% url 'announcement_list' %}" class="btn btn-light rounded-pill px-4 py-2 border fw-bold small text-muted">
+                    <i class="bi bi-arrow-left me-1"></i> Back to list
+                </a>
+                
+                {% if is_manager %}
+                <div class="d-flex gap-2">
+                    <a href="{% url 'edit_announcement' announcement.id %}" class="btn btn-dark rounded-pill px-4 py-2 fw-bold small">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </a>
+                    {% if announcement.is_active %}
+                    <a href="{% url 'delete_announcement' announcement.id %}" class="btn btn-outline-danger rounded-pill px-4 py-2 fw-bold small">
+                        <i class="bi bi-archive me-1"></i> Archive
+                    </a>
+                    {% else %}
+                    <form action="{% url 'unarchive_announcement' announcement.id %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-success rounded-pill px-4 py-2 fw-bold small">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Restore
+                        </button>
+                    </form>
+                    {% endif %}
+
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

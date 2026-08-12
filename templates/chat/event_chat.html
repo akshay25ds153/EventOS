@@ -1,0 +1,116 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ event.name }} Discussion | EventOS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/chat.css' %}">
+{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house-door-fill me-1"></i>Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'chat_dashboard' %}">Messages</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ event.name }}</li>
+{% endblock %}
+
+{% block content %}
+<!-- Chat Panel: sidebar + event chat side by side -->
+<div class="chat-container">
+    {% include 'chat/chat_sidebar.html' %}
+
+    <!-- Chat Right Panel -->
+    <div class="chat-main">
+
+        <!-- Chat Header -->
+        <div class="chat-main-header justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="chat-item-avatar event-avatar me-3">
+                    <i class="bi bi-calendar-event"></i>
+                </div>
+                <div class="chat-main-header-info">
+                    <div class="chat-main-header-title d-flex align-items-center gap-2">
+                        <span>{{ event.name }}</span>
+                        {% if member_role %}
+                            <span class="badge bg-dark text-white rounded-pill px-2 py-1 fw-semibold" style="font-size:0.7rem;">{{ member_role }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="chat-main-header-subtitle">
+                        <i class="bi bi-geo-alt me-1"></i>{{ event.venue }} &nbsp;|&nbsp;
+                        <i class="bi bi-calendar3 me-1"></i>{{ event.start_date }}
+                    </div>
+                </div>
+            </div>
+            <a href="{% url 'event_details' event.id %}" class="btn btn-sm btn-outline-dark rounded-pill px-3 fw-semibold d-flex align-items-center gap-1">
+                <i class="bi bi-info-circle"></i>
+                <span class="d-none d-sm-inline">Details</span>
+            </a>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages-container" id="chatMessages">
+            {% for msg in messages_list %}
+                {% if msg.sender == request.user %}
+                    <div class="chat-message-wrapper outgoing mb-2 ms-auto" style="max-width:75%;">
+                        <div>
+                            <div class="d-flex align-items-baseline justify-content-end gap-2 mb-1">
+                                <span class="chat-msg-time">{{ msg.created_at|date:"g:i A" }}</span>
+                            </div>
+                            <div class="chat-message-bubble text-start" style="background:#18181B;color:#fff;border-radius:16px;border-bottom-right-radius:4px;">
+                                {{ msg.content|linebreaksbr }}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="chat-message-wrapper incoming mb-2 d-flex align-items-start gap-2" style="max-width:75%;">
+                        {% if msg.sender.profile.profile_photo %}
+                            <img src="{{ msg.sender.profile.profile_photo.url }}"
+                                 class="chat-msg-avatar flex-shrink-0" style="object-fit:cover;padding:0;" alt="{{ msg.sender.username }}">
+                        {% else %}
+                            <div class="chat-msg-avatar flex-shrink-0">
+                                {{ msg.sender.username|slice:":1"|upper }}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <div class="d-flex align-items-baseline gap-2 mb-1">
+                                <span class="fw-bold" style="font-size:0.85rem;color:#1e293b;">{{ msg.sender.username }}</span>
+                                {% if msg.sender_role %}
+                                    <span class="badge bg-light text-dark border rounded-pill px-2 fw-semibold" style="font-size:0.7rem;">{{ msg.sender_role }}</span>
+                                {% endif %}
+                                <span class="chat-msg-time">{{ msg.created_at|date:"g:i A" }}</span>
+                            </div>
+                            <div class="chat-message-bubble" style="background:#F8FAFC;color:#1e293b;border:1px solid #F1F5F9;border-radius:16px;border-bottom-left-radius:4px;">
+                                {{ msg.content|linebreaksbr }}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% empty %}
+                <div class="text-center text-muted py-5 w-100 my-auto">
+                    <i class="bi bi-chat-text-fill display-4 d-block mb-3 opacity-30"></i>
+                    No messages in this channel yet — start the conversation!
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Input -->
+        <div class="chat-input-area">
+            <form action="{% url 'send_event_message' event.id %}" method="post" class="chat-input-form">
+                {% csrf_token %}
+                <input type="text" name="content" class="chat-input-field"
+                       placeholder="Message the group..." required autocomplete="off" autofocus>
+                <button type="submit" class="btn btn-dark rounded-circle d-flex align-items-center justify-content-center"
+                        style="width:42px;height:42px;flex-shrink:0;">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var c = document.getElementById("chatMessages");
+    if (c) c.scrollTop = c.scrollHeight;
+});
+</script>
+{% endblock %}

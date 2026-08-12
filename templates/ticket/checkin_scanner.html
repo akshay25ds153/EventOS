@@ -1,0 +1,208 @@
+{% extends 'base/base.html' %}
+
+{% block title %}QR Ticket Check-In | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house-door-fill me-1"></i>Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">QR Check-in</li>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="fw-bold tracking-tight text-dark mb-1">QR Ticket Check-In Engine</h1>
+        <p class="text-muted mb-0">Scan attendee ticket QR codes using your device's webcam to verify attendance in real-time.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Camera Scanner -->
+    <div class="col-lg-6">
+        <div class="card border-0 rounded-4 shadow-sm bg-white p-4 h-100">
+            <h5 class="fw-bold text-dark mb-4 pb-3 border-bottom d-flex align-items-center gap-2">
+                <i class="bi bi-qr-code-scan text-dark"></i>
+                <span>Webcam Scanner Feed</span>
+            </h5>
+            
+            <div class="d-flex flex-column align-items-center justify-content-center py-4">
+                <!-- Camera stream container -->
+                <div id="reader" class="shadow-sm" style="width: 100%; max-width: 450px; border-radius: 16px; overflow: hidden; background: #F8FAFC; border: 1px solid #F1F5F9;"></div>
+                
+                <!-- Scan feedback container -->
+                <div id="scanner-feedback" class="mt-4 w-100" style="display: none; max-width: 450px;">
+                    <div id="feedback-alert" class="alert d-flex align-items-center p-3 mb-0 rounded-4 border-0 shadow-sm" role="alert">
+                        <div id="feedback-icon" class="me-3 fs-3"></div>
+                        <div id="feedback-message" class="small fw-semibold"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Recent Check-in Logs -->
+    <div class="col-lg-6">
+        <div class="card border-0 rounded-4 shadow-sm bg-white p-4 h-100">
+            <h5 class="fw-bold text-dark mb-4 pb-3 border-bottom d-flex align-items-center gap-2">
+                <i class="bi bi-clock-history text-dark"></i>
+                <span>Recent Attendance Logs</span>
+            </h5>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="checkin-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3 text-muted extra-small text-uppercase fw-bold">Name</th>
+                            <th class="text-muted extra-small text-uppercase fw-bold">Role</th>
+                            <th class="text-muted extra-small text-uppercase fw-bold">Event</th>
+                            <th class="text-end pe-3 text-muted extra-small text-uppercase fw-bold">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="checkin-logs-body">
+                        {% for ticket in recent_tickets %}
+                            <tr>
+                                <td class="ps-3 fw-bold text-dark">{{ ticket.member.name }}</td>
+                                <td><span class="badge bg-light text-dark border rounded-pill px-2 py-1 extra-small fw-semibold">{{ ticket.member.role }}</span></td>
+                                <td class="text-muted text-truncate" style="max-width: 150px;">{{ ticket.member.event.name }}</td>
+                                <td class="text-end pe-3 text-muted small fw-semibold">{{ ticket.checked_in_at|date:"g:i A" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr id="no-logs-row">
+                                <td colspan="4" class="text-center text-muted py-5">
+                                    <div class="rounded-circle bg-light border p-3 d-inline-flex mb-2 text-muted">
+                                        <i class="bi bi-qr-code fs-3"></i>
+                                    </div>
+                                    <p class="mb-0 small">No check-in activity logged during this session.</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- html5-qrcode scanner source code -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+    // CSRF token extractor
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Play visual beep/flash or dynamic audio beep
+    function playBeepSound() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+        } catch (e) {
+            console.log("Audio play blocked by browser policies.");
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const checkinLogsBody = document.getElementById('checkin-logs-body');
+        const noLogsRow = document.getElementById('no-logs-row');
+
+        // Helper to add checked-in row
+        function addRecentCheckin(data) {
+            if (noLogsRow) {
+                noLogsRow.remove();
+            }
+            const row = document.createElement('tr');
+            row.style.background = '#f0fdf4';
+            row.innerHTML = `
+                <td class="ps-3 fw-bold text-dark">${data.attendee_name}</td>
+                <td><span class="badge bg-light text-dark border rounded-pill px-2 py-1 extra-small fw-semibold">${data.role}</span></td>
+                <td class="text-muted text-truncate" style="max-width: 150px;">${data.event}</td>
+                <td class="text-end pe-3 text-muted small fw-semibold">${data.checked_in_at}</td>
+            `;
+            checkinLogsBody.insertBefore(row, checkinLogsBody.firstChild);
+            
+            setTimeout(() => {
+                row.style.transition = 'background 1.5s ease';
+                row.style.background = 'transparent';
+            }, 1000);
+        }
+
+        // Initialize scanner
+        const html5QrCode = new Html5Qrcode("reader");
+        const feedbackContainer = document.getElementById('scanner-feedback');
+        const feedbackAlert = document.getElementById('feedback-alert');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const feedbackMessage = document.getElementById('feedback-message');
+        let isScanningLocked = false;
+
+        function onScanSuccess(decodedText, decodedResult) {
+            if (isScanningLocked) return;
+            isScanningLocked = true;
+
+            playBeepSound();
+
+            fetch("{% url 'checkin_api' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ ticket_code: decodedText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                feedbackContainer.style.display = 'block';
+                if (data.status === 'success') {
+                    feedbackAlert.className = 'alert alert-success d-flex align-items-center p-3 mb-0 rounded-4 shadow-sm';
+                    feedbackIcon.innerHTML = '<i class="bi bi-check-circle-fill text-success fs-3"></i>';
+                    feedbackMessage.innerHTML = `<strong class="text-success">${data.message}</strong><br><span class="text-muted extra-small">Attendee: ${data.attendee_name} (${data.event})</span>`;
+                    addRecentCheckin(data);
+                } else if (data.status === 'warning') {
+                    feedbackAlert.className = 'alert alert-warning d-flex align-items-center p-3 mb-0 rounded-4 shadow-sm';
+                    feedbackIcon.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-warning fs-3"></i>';
+                    feedbackMessage.innerHTML = `<strong class="text-warning">${data.message}</strong><br><span class="text-muted extra-small">Attendee: ${data.attendee_name}</span>`;
+                } else {
+                    feedbackAlert.className = 'alert alert-danger d-flex align-items-center p-3 mb-0 rounded-4 shadow-sm';
+                    feedbackIcon.innerHTML = '<i class="bi bi-x-circle-fill text-danger fs-3"></i>';
+                    feedbackMessage.innerHTML = `<strong class="text-danger">${data.message}</strong>`;
+                }
+
+                setTimeout(() => {
+                    isScanningLocked = false;
+                }, 2500);
+            })
+            .catch(error => {
+                console.error("Scan API Error:", error);
+                isScanningLocked = false;
+            });
+        }
+
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+        .catch(err => {
+            console.log("Unable to start webcam scanning:", err);
+        });
+    });
+</script>
+{% endblock %}

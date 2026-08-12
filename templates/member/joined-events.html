@@ -1,0 +1,209 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}My Tickets & Joined Events | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house-door-fill me-1"></i>Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">My Tickets</li>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="fw-bold tracking-tight text-dark mb-1">My Tickets & Joined Events</h1>
+        <p class="text-muted mb-0">Manage registered event passes, ticket codes, and attendance rosters.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        {% if request.user.is_staff %}
+        <a href="{% url 'add_member' %}" class="btn btn-dark rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+            <i class="bi bi-person-plus-fill"></i>
+            <span>Add Member Registration</span>
+        </a>
+        {% endif %}
+        <a href="{% url 'event_list' %}" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+            <i class="bi bi-calendar-plus"></i>
+            <span>Browse Events</span>
+        </a>
+    </div>
+</div>
+
+<!-- Metric Overview Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-4">
+        <div class="p-3 rounded-4 bg-light border border-light-subtle d-flex align-items-center justify-content-between">
+            <div>
+                <span class="text-muted extra-small text-uppercase fw-bold tracking-wider d-block mb-1">Total Joined Registrations</span>
+                <h3 class="fw-bold text-dark mb-0">{{ members|length }}</h3>
+            </div>
+            <div class="bg-white rounded-circle shadow-sm p-3 d-flex align-items-center justify-content-center text-primary" style="width: 48px; height: 48px;">
+                <i class="bi bi-ticket-perforated-fill fs-5"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-4">
+        <div class="p-3 rounded-4 bg-light border border-light-subtle d-flex align-items-center justify-content-between">
+            <div>
+                <span class="text-muted extra-small text-uppercase fw-bold tracking-wider d-block mb-1">Active Passes</span>
+                <h3 class="fw-bold text-success mb-0">{% for m in members %}{% if m.status == 'Active' %}1{% endif %}{% empty %}0{% endfor %}</h3>
+            </div>
+            <div class="bg-white rounded-circle shadow-sm p-3 d-flex align-items-center justify-content-center text-success" style="width: 48px; height: 48px;">
+                <i class="bi bi-patch-check-fill fs-5"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-4">
+        <div class="p-3 rounded-4 bg-light border border-light-subtle d-flex align-items-center justify-content-between">
+            <div>
+                <span class="text-muted extra-small text-uppercase fw-bold tracking-wider d-block mb-1">Verified Member Status</span>
+                <h3 class="fw-bold text-dark mb-0">Active Pool</h3>
+            </div>
+            <div class="bg-white rounded-circle shadow-sm p-3 d-flex align-items-center justify-content-center text-dark" style="width: 48px; height: 48px;">
+                <i class="bi bi-person-check-fill fs-5"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Table Card Container -->
+<div class="card border-0 rounded-4 shadow-sm bg-white p-4 p-md-4 mb-4">
+    
+    <!-- View Switcher & Title Controls -->
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4 pb-3 border-bottom">
+        <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-journal-check text-dark"></i>
+            <span>Joined Event Roster</span>
+        </h5>
+
+        <div class="d-flex align-items-center gap-2">
+            <div class="btn-group bg-light p-1 rounded-pill border" role="group" aria-label="View Switcher">
+                <button type="button" class="btn btn-sm rounded-pill px-3 fw-semibold active btn-dark" id="btnGridView" onclick="switchView('grid')">
+                    <i class="bi bi-grid-3x3-gap-fill me-1"></i> Grid
+                </button>
+                <button type="button" class="btn btn-sm rounded-pill px-3 fw-semibold text-muted" id="btnTableView" onclick="switchView('table')">
+                    <i class="bi bi-table me-1"></i> Table
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRID VIEW -->
+    <div id="joinedGridView">
+        <div class="row g-4">
+            {% for member in members %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card-aether-white h-100 p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <span class="badge rounded-pill px-3 py-1 fw-semibold small {% if member.status == 'Active' %}bg-success-subtle text-success border border-success-subtle{% else %}bg-danger-subtle text-danger border border-danger-subtle{% endif %}">
+                                <i class="bi bi-circle-fill me-1 extra-small"></i> {{ member.status }}
+                            </span>
+                            <span class="badge bg-light text-dark border rounded-pill px-2 py-1 extra-small fw-semibold">{{ member.role }}</span>
+                        </div>
+
+                        <h5 class="fw-bold text-dark mb-1">{{ member.name }}</h5>
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-calendar-event me-1 text-primary"></i> {{ member.event.name }}
+                        </p>
+
+                        <div class="p-3 rounded-3 bg-light border mb-3">
+                            <div class="d-flex align-items-center gap-2 text-secondary extra-small mb-1">
+                                <i class="bi bi-envelope"></i>
+                                <span class="text-truncate">{{ member.email }}</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 text-secondary extra-small">
+                                <i class="bi bi-telephone"></i>
+                                <span>{{ member.phone|default:"No phone provided" }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
+                        <a href="{% url 'member_details' member.id %}" class="btn btn-sm btn-outline-dark rounded-pill px-3 fw-semibold">
+                            <i class="bi bi-eye me-1"></i> Details
+                        </a>
+                        {% if member.tickets.first and member.tickets.first.uuid %}
+                        <a href="{% url 'ticket_details' member.tickets.first.uuid %}" class="btn btn-sm btn-dark rounded-pill px-3 fw-semibold">
+                            <i class="bi bi-ticket-perforated me-1"></i> Ticket Pass
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <div class="rounded-circle bg-light border p-4 d-inline-flex mb-3 text-muted">
+                        <i class="bi bi-ticket-perforated fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">No Joined Event Tickets Found</h5>
+                    <p class="text-muted small mb-3">You have not registered for any upcoming events yet.</p>
+                    <a href="{% url 'event_list' %}" class="btn btn-dark rounded-pill px-4 py-2 fw-semibold">
+                        <i class="bi bi-calendar-event me-2"></i>Explore Upcoming Events
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- TABLE VIEW -->
+    <div id="joinedTableView" class="d-none">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3 text-muted extra-small text-uppercase fw-bold">#</th>
+                        <th class="text-muted extra-small text-uppercase fw-bold">Member Name</th>
+                        <th class="text-muted extra-small text-uppercase fw-bold">Assigned Event</th>
+                        <th class="text-muted extra-small text-uppercase fw-bold">Email</th>
+                        <th class="text-muted extra-small text-uppercase fw-bold">Role</th>
+                        <th class="text-muted extra-small text-uppercase fw-bold">Status</th>
+                        <th class="text-end pe-3 text-muted extra-small text-uppercase fw-bold">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                    <tr>
+                        <td class="ps-3 fw-medium text-muted">{{ forloop.counter }}</td>
+                        <td class="fw-bold text-dark">{{ member.name }}</td>
+                        <td>
+                            <a href="{% url 'event_details' member.event.id %}" class="text-decoration-none fw-semibold text-primary">
+                                {{ member.event.name }}
+                            </a>
+                        </td>
+                        <td class="text-secondary small">{{ member.email }}</td>
+                        <td><span class="badge bg-light text-dark border rounded-pill px-2 py-1 extra-small fw-semibold">{{ member.role }}</span></td>
+                        <td>
+                            <span class="badge rounded-pill px-3 py-1 fw-semibold extra-small {% if member.status == 'Active' %}bg-success-subtle text-success border border-success-subtle{% else %}bg-danger-subtle text-danger border border-danger-subtle{% endif %}">
+                                {{ member.status }}
+                            </span>
+                        </td>
+                        <td class="text-end pe-3">
+                            <div class="d-flex align-items-center justify-content-end gap-2">
+                                <a href="{% url 'member_details' member.id %}" class="btn btn-sm btn-light border rounded-pill px-3 fw-semibold">
+                                    <i class="bi bi-eye"></i> Details
+                                </a>
+                                {% if member.tickets.first and member.tickets.first.uuid %}
+                                <a href="{% url 'ticket_details' member.tickets.first.uuid %}" class="btn btn-sm btn-dark rounded-pill px-3 fw-semibold">
+                                    <i class="bi bi-ticket-perforated"></i> Ticket
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            No joined registrations found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

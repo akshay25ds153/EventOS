@@ -1,0 +1,92 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Waiting List Queue | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'event_list' %}">Events</a></li>
+<li class="breadcrumb-item"><a href="{% url 'event_details' event.id %}">{{ event.name }}</a></li>
+<li class="breadcrumb-item active" aria-current="page">Waiting List</li>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h3 class="fw-extrabold text-dark mb-1">Waiting List Queue</h3>
+        <p class="text-muted small mb-0">Track waitlist ordering for <strong>{{ event.name }}</strong>. Attendees are auto-promoted as spots open.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'event_details' event.id %}" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-bold small">
+            <i class="bi bi-arrow-left me-1"></i> Back to Event
+        </a>
+    </div>
+</div>
+
+<!-- Waitlist Capacity Warning Info Card -->
+<div class="alert alert-info rounded-3 d-flex align-items-center gap-3 mb-4 shadow-sm" role="alert">
+    <i class="bi bi-info-circle-fill fs-4 flex-shrink-0"></i>
+    <div class="small">
+        <span class="fw-bold">Automatic Promotion Queue:</span> This event has reached capacity ({{ event.max_participants }} max). New registrants are queued here on a first-in, first-out basis. Removing active participants automatically issues tickets to next in line.
+    </div>
+</div>
+
+<!-- Waitlist Table -->
+<div class="card-aether-white p-0 rounded-3 border overflow-hidden shadow-sm mb-5">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light extra-small text-uppercase fw-bold text-muted">
+                <tr>
+                    <th class="ps-4">Position</th>
+                    <th>Attendee Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Registration Date</th>
+                    <th class="pe-4 text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="small">
+                {% for member in waiting_members %}
+                <tr>
+                    <td class="ps-4">
+                        <span class="badge bg-dark rounded-pill px-2.5 py-1.5 fw-bold font-monospace">#{{ forloop.counter }}</span>
+                    </td>
+                    <td>
+                        <span class="fw-bold text-dark">{{ member.name }}</span>
+                        {% if member.organization %}
+                        <span class="text-muted extra-small d-block">{{ member.organization }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ member.email }}</td>
+                    <td>{{ member.phone }}</td>
+                    <td>{{ member.registration_date|date:"Y-m-d H:i:s" }}</td>
+                    <td class="pe-4 text-end">
+                        {% if request.user.is_staff %}
+                        <div class="d-inline-flex gap-2">
+                            <a href="{% url 'edit_member' member.id %}" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1 fw-bold extra-small">
+                                Edit Status
+                            </a>
+                            <form action="{% url 'delete_member' member.id %}" method="GET" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle p-1 extra-small" title="Remove Registration">
+                                    <i class="bi bi-trash fs-6"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="bi bi-people fs-1 d-block mb-3"></i>
+                        <h5 class="fw-bold text-dark">Queue is Empty</h5>
+                        <p class="small mb-0">There are no pending waiting list registrations for this event.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

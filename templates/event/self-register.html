@@ -1,0 +1,59 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Register for {{ event.name }} | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'event_list' %}">Events</a></li>
+<li class="breadcrumb-item"><a href="{% url 'event_details' event.id %}">{{ event.name }}</a></li>
+<li class="breadcrumb-item active" aria-current="page">Self-Register</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <!-- Event Quick Info Header -->
+        <div class="card shadow-sm border-0 mb-4 overflow-hidden">
+            <div class="bg-primary text-white p-4">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-white text-primary small">{{ event.category.name }}</span>
+                    <span class="small opacity-75"><i class="bi bi-geo-alt me-1"></i>{{ event.venue }}</span>
+                </div>
+                <h4 class="fw-bold mb-0">Register for: {{ event.name }}</h4>
+            </div>
+            <div class="card-body bg-light-subtle py-3 border-bottom">
+                <div class="row text-center g-2 text-muted small">
+                    <div class="col-6 border-end">
+                        <span class="fw-medium"><i class="bi bi-calendar-event me-1"></i>Date:</span> {{ event.start_date }}
+                    </div>
+                    <div class="col-6">
+                        <span class="fw-medium"><i class="bi bi-clock me-1"></i>Time:</span> {{ event.start_time }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Form Card -->
+        <div class="card shadow-sm border-0 p-4 p-md-5">
+            <h5 class="fw-bold text-dark mb-4"><i class="bi bi-person-fill-check text-primary me-2"></i>Complete Registration Details</h5>
+            
+            {% load crispy_forms_tags %}
+            <form action="{% url 'event_self_register' event.id %}" method="POST" novalidate>
+                {% csrf_token %}
+                
+                {{ form|crispy }}
+
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary py-2 text-uppercase fw-semibold" style="letter-spacing: 0.05em;">
+                        Confirm Registration
+                    </button>
+                    <a href="{% url 'event_details' event.id %}" class="btn btn-outline-secondary py-2 text-uppercase fw-semibold" style="letter-spacing: 0.05em;">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

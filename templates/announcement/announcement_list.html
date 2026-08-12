@@ -1,0 +1,237 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Announcements | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">Announcements</li>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h3 class="fw-extrabold text-dark mb-1">Announcements</h3>
+        <p class="text-muted small mb-0">System-wide notifications and event-specific announcements.</p>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <!-- View Switcher -->
+        <div class="btn-group rounded-pill p-1 bg-light border" role="group" aria-label="View Switcher">
+            <button type="button" class="btn btn-sm rounded-pill px-3 py-1 fw-bold extra-small active" id="btnGridView" onclick="switchView('grid')">
+                <i class="bi bi-grid-3x3-gap-fill me-1"></i> Grid
+            </button>
+            <button type="button" class="btn btn-sm rounded-pill px-3 py-1 fw-bold extra-small text-muted" id="btnTableView" onclick="switchView('table')">
+                <i class="bi bi-list-ul me-1"></i> Table
+            </button>
+        </div>
+        
+        {% if is_manager %}
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold small shadow-sm dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-download me-1"></i> Export
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="exportDropdown">
+                <li><button class="dropdown-item py-2 small" onclick="exportData('csv', this)"><i class="bi bi-filetype-csv me-2 text-success"></i> Excel/CSV</button></li>
+                <li><button class="dropdown-item py-2 small" onclick="exportData('pdf', this)"><i class="bi bi-file-pdf me-2 text-danger"></i> PDF Document</button></li>
+            </ul>
+        </div>
+        
+        <a href="{% url 'create_announcement' %}" class="btn btn-dark rounded-pill px-4 py-2 fw-bold small shadow-sm">
+            <i class="bi bi-megaphone-fill me-1"></i> Post Announcement
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Announcements Grid View -->
+<div id="announcementsGridView" class="row g-4 mb-4">
+    {% for announcement in announcements %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card-aether-white h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <!-- Status / Target & Detail Link -->
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex gap-1 flex-wrap">
+                            <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 extra-small fw-semibold">
+                                <i class="bi bi-people me-1"></i>{{ announcement.get_audience_display }}
+                            </span>
+                            {% if not announcement.is_active %}
+                            <span class="badge bg-danger-subtle text-danger rounded-pill px-2.5 py-1 extra-small fw-bold">
+                                Archived
+                            </span>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'announcement_details' announcement.id %}" class="btn-circle-arrow" title="View Full Details">
+                            <i class="bi bi-arrow-up-right"></i>
+                        </a>
+                    </div>
+                    
+                    <h5 class="fw-extrabold text-dark mb-2">
+                        <a href="{% url 'announcement_details' announcement.id %}" class="text-dark text-decoration-none">{{ announcement.title }}</a>
+                    </h5>
+                    <p class="text-muted extra-small mb-3 text-truncate-3" style="white-space: pre-wrap;">{{ announcement.content }}</p>
+
+                    <!-- Associated Event Tag -->
+                    {% if announcement.event %}
+                    <div class="mb-3">
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1 extra-small fw-bold">
+                            <i class="bi bi-calendar-event me-1"></i>Event: {{ announcement.event.name }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Footer Roster / Actions -->
+                <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-3">
+                    <span class="text-muted extra-small">
+                        <i class="bi bi-clock me-1"></i>{{ announcement.created_at|date:"M d, Y H:i" }}
+                    </span>
+                    
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="{% url 'announcement_details' announcement.id %}" class="btn btn-sm btn-light rounded-circle" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;" title="View Detail">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if is_manager %}
+                        <a href="{% url 'edit_announcement' announcement.id %}" class="btn btn-sm btn-light rounded-circle text-primary" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;" title="Edit Announcement">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% if announcement.is_active %}
+                        <a href="{% url 'delete_announcement' announcement.id %}" class="btn btn-sm btn-light rounded-circle text-danger" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;" title="Archive/Delete">
+                            <i class="bi bi-archive"></i>
+                        </a>
+                        {% else %}
+                        <form action="{% url 'unarchive_announcement' announcement.id %}" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-light rounded-circle text-success" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: none;" title="Restore Announcement">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="card-aether-white text-center py-5">
+                <i class="bi bi-megaphone fs-1 text-muted d-block mb-2"></i>
+                <h6 class="fw-bold text-dark">No Announcements Found</h6>
+                <p class="text-muted extra-small mb-3">No announcements or broadcasts have been posted yet.</p>
+                {% if is_manager %}
+                <a href="{% url 'create_announcement' %}" class="btn btn-dark rounded-pill px-4 btn-sm fw-bold">Post First Announcement</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Announcements Table View -->
+<div id="announcementsTableView" class="card-aether-white d-none mb-4">
+    <div class="table-responsive">
+        <table class="table align-middle border-0 mb-0">
+            <thead>
+                <tr class="text-muted extra-small text-uppercase border-bottom">
+                    <th class="border-0 pb-3">Title</th>
+                    <th class="border-0 pb-3">Target Audience</th>
+                    <th class="border-0 pb-3">Event Connection</th>
+                    <th class="border-0 pb-3">Date Posted</th>
+                    <th class="border-0 pb-3">Status</th>
+                    <th class="border-0 pb-3 text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for announcement in announcements %}
+                    <tr class="border-bottom-0">
+                        <td class="py-3 fw-bold text-dark">
+                            <a href="{% url 'announcement_details' announcement.id %}" class="text-dark text-decoration-none">{{ announcement.title }}</a>
+                        </td>
+                        <td class="py-3">
+                            <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 extra-small fw-semibold">
+                                {{ announcement.get_audience_display }}
+                            </span>
+                        </td>
+                        <td class="py-3 text-muted extra-small">
+                            {{ announcement.event.name|default:"Global Broad" }}
+                        </td>
+                        <td class="py-3 text-muted small">
+                            {{ announcement.created_at|date:"Y-m-d H:i" }}
+                        </td>
+                        <td class="py-3">
+                            {% if announcement.is_active %}
+                            <span class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1 extra-small fw-bold">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger-subtle text-danger rounded-pill px-2.5 py-1 extra-small fw-bold">Archived</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 text-end">
+                            <div class="d-flex align-items-center justify-content-end gap-1">
+                                <a href="{% url 'announcement_details' announcement.id %}" class="btn btn-sm btn-light rounded-circle" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if is_manager %}
+                                <a href="{% url 'edit_announcement' announcement.id %}" class="btn btn-sm btn-light rounded-circle text-primary" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if announcement.is_active %}
+                                <a href="{% url 'delete_announcement' announcement.id %}" class="btn btn-sm btn-light rounded-circle text-danger" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;" title="Delete">
+                                    <i class="bi bi-archive"></i>
+                                </a>
+                                {% else %}
+                                <form action="{% url 'unarchive_announcement' announcement.id %}" method="POST" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-light rounded-circle text-success" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: none;" title="Restore">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted small">No announcements found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function switchView(view) {
+        const grid = document.getElementById('announcementsGridView');
+        const table = document.getElementById('announcementsTableView');
+        const btnGrid = document.getElementById('btnGridView');
+        const btnTable = document.getElementById('btnTableView');
+        
+        if (view === 'grid') {
+            grid.classList.remove('d-none');
+            table.classList.add('d-none');
+            btnGrid.classList.add('active');
+            btnGrid.classList.remove('text-muted');
+            btnTable.classList.remove('active');
+            btnTable.classList.add('text-muted');
+            localStorage.setItem('ems-announcements-view', 'grid');
+        } else {
+            grid.classList.add('d-none');
+            table.classList.remove('d-none');
+            btnGrid.classList.remove('active');
+            btnGrid.classList.add('text-muted');
+            btnTable.classList.add('active');
+            btnTable.classList.remove('text-muted');
+            localStorage.setItem('ems-announcements-view', 'table');
+        }
+    }
+    
+    // Restore layout preference on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const pref = localStorage.getItem('ems-announcements-view') || 'grid';
+        switchView(pref);
+    });
+</script>
+{% endblock %}

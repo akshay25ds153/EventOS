@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: ems_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: eventmanagement
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: ems_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  web:
+    build: .
+    container_name: ems_web
+    restart: always
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=django-production-insecure-ems-platform-2026-key
+      - DB_HOST=db
+      - DB_NAME=eventmanagement
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_TASK_ALWAYS_EAGER=False
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - media_volume:/app/media
+
+  celery_worker:
+    build: .
+    container_name: ems_celery_worker
+    command: celery
+    restart: always
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=django-production-insecure-ems-platform-2026-key
+      - DB_HOST=db
+      - DB_NAME=eventmanagement
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_TASK_ALWAYS_EAGER=False
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - media_volume:/app/media
+
+volumes:
+  postgres_data:
+  media_volume:

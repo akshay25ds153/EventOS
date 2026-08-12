@@ -1,0 +1,93 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Event Ticket | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'joined_events' %}">Joined Events</a></li>
+<li class="breadcrumb-item active" aria-current="page">Ticket</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center py-4">
+    <!-- Ticket Card Container -->
+    <div class="card shadow border-0" style="max-width: 750px; width: 100%; border-radius: 16px; overflow: hidden; background: #ffffff;">
+        <div class="row g-0">
+            <!-- Left Side: Event & Attendee Details -->
+            <div class="col-md-8 p-4 p-md-5 d-flex flex-column justify-content-between">
+                <div>
+                    <!-- Category Badge -->
+                    <span class="badge bg-light-primary text-primary text-uppercase mb-3 px-3 py-2 fw-semibold" style="letter-spacing: 0.05em; font-size: 0.75rem;">
+                        {{ ticket.member.event.category.name }}
+                    </span>
+                    <!-- Event Title -->
+                    <h3 class="fw-bold text-dark mb-2">{{ ticket.member.event.name }}</h3>
+                    <p class="text-muted small mb-4">{{ ticket.member.event.description|truncatewords:20 }}</p>
+                    
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <span class="text-muted small d-block mb-1">DATE</span>
+                            <span class="fw-semibold text-dark"><i class="bi bi-calendar3 me-2"></i>{{ ticket.member.event.start_date }}</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted small d-block mb-1">TIME</span>
+                            <span class="fw-semibold text-dark"><i class="bi bi-clock me-2"></i>{{ ticket.member.event.start_time }}</span>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <span class="text-muted small d-block mb-1">VENUE</span>
+                            <span class="fw-semibold text-dark"><i class="bi bi-geo-alt me-2 text-danger"></i>{{ ticket.member.event.venue.name }} ({{ ticket.member.event.venue.location }})</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendee Info footer -->
+                <div class="mt-4 pt-4 border-top">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="bi bi-person-fill text-muted fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-0">{{ ticket.member.name }}</h6>
+                            <span class="text-muted small">{{ ticket.member.role }} | {{ ticket.member.email }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: QR Code Area (Ticket Stub) -->
+            <div class="col-md-4 p-4 text-center d-flex flex-column align-items-center justify-content-center bg-light border-start" style="border-style: dashed !important; border-width: 0 0 0 2px !important; border-color: #dee2e6 !important;">
+                <span class="text-muted small fw-bold text-uppercase mb-3" style="letter-spacing: 0.1em;">Scan to Check In</span>
+                
+                <!-- Canvas QR code destination -->
+                <div class="bg-white p-2 rounded shadow-sm mb-3">
+                    <canvas id="qr-code"></canvas>
+                </div>
+                
+                <code class="text-muted small d-block truncate mb-2" style="max-width: 150px; font-size: 0.7rem;">{{ ticket.ticket_code }}</code>
+                
+                <span class="badge {% if ticket.status == 'Active' %}bg-success{% elif ticket.status == 'Used' %}bg-primary{% else %}bg-secondary{% endif %} px-3 py-2 rounded-pill mt-2">
+                    Ticket {{ ticket.status }}
+                </span>
+                
+                {% if ticket.checked_in_at %}
+                <span class="text-muted small mt-2 d-block">Checked In: {{ ticket.checked_in_at }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dynamic client-side QR Code rendering library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var qr = new QRious({
+            element: document.getElementById('qr-code'),
+            value: '{{ ticket.ticket_code }}',
+            size: 150,
+            background: '#ffffff',
+            foreground: '#0f172a'
+        });
+    });
+</script>
+{% endblock %}

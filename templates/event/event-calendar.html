@@ -1,0 +1,240 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Interactive Schedule Calendar | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'event_list' %}">Events</a></li>
+<li class="breadcrumb-item active" aria-current="page">Interactive Calendar</li>
+{% endblock %}
+
+{% block content %}
+<!-- FullCalendar CDN styles -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h3 class="fw-extrabold text-dark mb-1">Interactive Schedule Calendar</h3>
+        <p class="text-muted small mb-0">Browse and manage scheduled events inside a unified monthly, weekly, or daily view.</p>
+    </div>
+    <div>
+        <a href="{% url 'event_list' %}" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-bold small shadow-sm">
+            <i class="bi bi-grid-3x3-gap-fill me-1"></i> Grid / Table View
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Sidebar Filters -->
+    <div class="col-lg-3">
+        <div class="card border-0 rounded-4 shadow-sm bg-white p-4">
+            <h5 class="fw-extrabold text-dark mb-4"><i class="bi bi-funnel text-primary me-2"></i>Filter Schedule</h5>
+            
+            <form id="calendarFilterForm" onsubmit="event.preventDefault();">
+                <!-- Search -->
+                <div class="mb-3">
+                    <label for="searchQuery" class="text-muted extra-small fw-bold text-uppercase mb-1.5 d-block">Search Event</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" id="searchQuery" class="form-control bg-light border-start-0 small" placeholder="Type event name...">
+                    </div>
+                </div>
+
+                <!-- Category -->
+                <div class="mb-3">
+                    <label for="filterCategory" class="text-muted extra-small fw-bold text-uppercase mb-1.5 d-block">Category</label>
+                    <select id="filterCategory" class="form-select form-select-sm bg-light">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Venue -->
+                <div class="mb-3">
+                    <label for="filterVenue" class="text-muted extra-small fw-bold text-uppercase mb-1.5 d-block">Venue</label>
+                    <select id="filterVenue" class="form-select form-select-sm bg-light">
+                        <option value="">All Venues</option>
+                        {% for ven in venues %}
+                            <option value="{{ ven.id }}">{{ ven.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Status -->
+                <div class="mb-4">
+                    <label for="filterStatus" class="text-muted extra-small fw-bold text-uppercase mb-1.5 d-block">Status</label>
+                    <select id="filterStatus" class="form-select form-select-sm bg-light">
+                        <option value="">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <button type="button" class="btn btn-sm btn-dark w-100 rounded-pill py-2 fw-bold" onclick="resetCalendarFilters()">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Clear Filters
+                </button>
+            </form>
+        </div>
+
+        <!-- Legend -->
+        <div class="card border-0 rounded-4 shadow-sm bg-white p-4 mt-3">
+            <h6 class="fw-bold text-dark mb-3">Color Legend</h6>
+            <div class="d-flex flex-column gap-2 extra-small font-semibold">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="rounded-circle" style="width: 10px; height: 10px; background-color: #4F46E5;"></span>
+                    <span>Technical Events</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="rounded-circle" style="width: 10px; height: 10px; background-color: #EC4899;"></span>
+                    <span>Cultural Events</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="rounded-circle" style="width: 10px; height: 10px; background-color: #10B981;"></span>
+                    <span>Sports Events</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="rounded-circle" style="width: 10px; height: 10px; background-color: #6B7280;"></span>
+                    <span>Completed Events</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="rounded-circle" style="width: 10px; height: 10px; background-color: #EF4444;"></span>
+                    <span>Cancelled Events</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Calendar Area -->
+    <div class="col-lg-9">
+        <div class="card border-0 rounded-4 shadow-sm bg-white p-4 p-md-5">
+            <div id="calendar" style="min-height: 600px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- FullCalendar Script and Init -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script>
+    let calendar;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+            },
+            themeSystem: 'bootstrap5',
+            events: function(info, successCallback, failureCallback) {
+                // Get filter variables
+                const q = document.getElementById('searchQuery').value;
+                const category_id = document.getElementById('filterCategory').value;
+                const venue_id = document.getElementById('filterVenue').value;
+                const status = document.getElementById('filterStatus').value;
+
+                let url = `/api/events/calendar/?start=${encodeURIComponent(info.startStr)}&end=${encodeURIComponent(info.endStr)}`;
+                
+                if (q) url += `&q=${encodeURIComponent(q)}`;
+                if (category_id) url += `&category_id=${encodeURIComponent(category_id)}`;
+                if (venue_id) url += `&venue_id=${encodeURIComponent(venue_id)}`;
+                if (status) url += `&status=${encodeURIComponent(status)}`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => successCallback(data))
+                    .catch(err => failureCallback(err));
+            },
+            eventClick: function(info) {
+                if (info.event.url) {
+                    window.location.href = info.event.url;
+                    info.jsEvent.preventDefault();
+                }
+            },
+            eventDidMount: function(info) {
+                // Tooltip or popover logic can go here if needed
+                if (info.event.extendedProps.description) {
+                    info.el.setAttribute('title', `${info.event.title}: ${info.event.extendedProps.description} (${info.event.extendedProps.venue_name})`);
+                }
+            }
+        });
+        
+        calendar.render();
+
+        // Bind filter event listeners
+        document.getElementById('filterCategory').addEventListener('change', () => calendar.refetchEvents());
+        document.getElementById('filterVenue').addEventListener('change', () => calendar.refetchEvents());
+        document.getElementById('filterStatus').addEventListener('change', () => calendar.refetchEvents());
+        
+        // Debounce live search keyup
+        let searchTimeout;
+        document.getElementById('searchQuery').addEventListener('keyup', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                calendar.refetchEvents();
+            }, 300);
+        });
+    });
+
+    function resetCalendarFilters() {
+        document.getElementById('calendarFilterForm').reset();
+        calendar.refetchEvents();
+    }
+</script>
+
+<style>
+    /* FullCalendar styling overrides to fit EventOS premium design */
+    .fc {
+        font-family: inherit;
+    }
+    .fc-header-toolbar {
+        margin-bottom: 2rem !important;
+    }
+    .fc-button-primary {
+        background-color: var(--bs-dark, #1E293B) !important;
+        border-color: var(--bs-dark, #1E293B) !important;
+        color: #fff !important;
+        font-weight: bold !important;
+        font-size: 0.8rem !important;
+        border-radius: 20px !important;
+        padding: 0.5rem 1rem !important;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+        transition: opacity 0.2s ease;
+    }
+    .fc-button-primary:hover {
+        opacity: 0.9;
+    }
+    .fc-button-active {
+        background-color: var(--primary-accent, #3B82F6) !important;
+        border-color: var(--primary-accent, #3B82F6) !important;
+    }
+    .fc-toolbar-title {
+        font-size: 1.25rem !important;
+        font-weight: 800 !important;
+        color: #0F172A !important;
+    }
+    .fc-col-header-cell {
+        background-color: #F8FAFC !important;
+        font-weight: bold !important;
+        color: #64748B !important;
+        font-size: 0.75rem !important;
+        text-transform: uppercase;
+        padding: 0.75rem 0 !important;
+    }
+    .fc-daygrid-event {
+        border-radius: 6px !important;
+        padding: 3px 6px !important;
+        font-size: 0.75rem !important;
+        font-weight: bold !important;
+        border: none !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+</style>
+{% endblock %}

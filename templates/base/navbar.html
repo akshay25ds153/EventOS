@@ -1,0 +1,135 @@
+<nav class="top-navbar justify-content-between w-100">
+    <div class="d-flex align-items-center flex-grow-1">
+        <!-- Desktop Sidebar Toggle Button -->
+        <button class="btn btn-link text-dark d-none d-lg-block p-0 me-3" id="sidebarCollapseBtn" type="button">
+            <i class="bi bi-list fs-3"></i>
+        </button>
+
+        <!-- Mobile Toggle Button (For Sidebar) -->
+        <button class="btn btn-link text-dark d-lg-none p-0 me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+            <i class="bi bi-list fs-2"></i>
+        </button>
+
+        <!-- Breadcrumbs -->
+        <div class="d-none d-md-flex align-items-center">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb navbar-breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house-door-fill me-1"></i>Home</a></li>
+                    {% block breadcrumbs %}
+                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                    {% endblock %}
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="navbar-search d-none d-md-block flex-grow-1 mx-3 mx-lg-4" style="position: relative;">
+        <div class="navbar-search-wrapper">
+            <i class="bi bi-search navbar-search-icon"></i>
+            <input type="text" id="navbarSearchInput" class="form-control w-100"
+                placeholder="Search events, members, categories..." aria-label="Search"
+                autocomplete="off">
+            <span id="navbarSearchSpinner" class="spinner-border spinner-border-sm text-muted d-none"
+                style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);"></span>
+        </div>
+        <!-- Live Results Dropdown -->
+        <div id="navbarSearchResults" class="d-none"
+            style="position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 1080;
+                   background: #fff; border: 1px solid #E4E4E7; border-radius: 14px;
+                   box-shadow: 0 16px 40px rgba(0,0,0,0.10); overflow: hidden; max-height: 420px; overflow-y: auto;">
+        </div>
+    </div>
+
+
+    <!-- Actions Area -->
+    <div class="navbar-nav-icons">
+        <!-- Theme Customize Toggle -->
+        <button class="navbar-icon-btn" type="button" id="themeCustomizeBtn" data-bs-toggle="offcanvas" data-bs-target="#themeCustomizeDrawer" aria-controls="themeCustomizeDrawer" title="Customize Theme">
+            <i class="bi bi-palette"></i>
+        </button>
+
+        <!-- Notification Dropdown -->
+        <div class="dropdown">
+            <button class="navbar-icon-btn" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-bell"></i>
+                {% if global_announcements_count > 0 %}
+                <span class="badge-dot" style="background-color: var(--theme-accent, #4F46E5);"></span>
+                {% endif %}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end p-2 border-0 shadow" aria-labelledby="notificationDropdown" style="width: 320px; font-size: 0.8rem; max-height: 400px; overflow-y: auto;">
+                <li class="px-2 py-1 mb-2 fw-bold text-dark border-bottom d-flex justify-content-between align-items-center">
+                    <span>Announcements</span>
+                    {% if global_announcements_count > 0 %}
+                    <span class="badge bg-dark rounded-pill">{{ global_announcements_count }}</span>
+                    {% endif %}
+                </li>
+                {% for announcement in global_announcements %}
+                <li>
+                    <a class="dropdown-item py-2 border-bottom rounded-3 text-wrap" href="{% url 'announcement_details' announcement.id %}">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-megaphone-fill text-primary" style="color: var(--theme-accent, #4F46E5) !important;"></i>
+                            <strong class="text-dark">{{ announcement.title }}</strong>
+                        </div>
+                        <p class="text-muted extra-small mb-1 text-truncate" style="max-width: 280px;">{{ announcement.content }}</p>
+                        <span class="text-muted extra-small" style="font-size: 0.75rem;"><i class="bi bi-clock me-1"></i>{{ announcement.created_at|timesince }} ago</span>
+                    </a>
+                </li>
+                {% empty %}
+                <li class="text-center py-4 text-muted extra-small">
+                    <i class="bi bi-bell-slash d-block fs-4 mb-1"></i>
+                    No new announcements
+                </li>
+                {% endfor %}
+                <li class="text-center pt-2 pb-1">
+                    <a href="{% url 'announcement_list' %}" class="text-decoration-none fw-bold text-primary small" style="color: var(--theme-accent, #4F46E5) !important;">View All</a>
+                </li>
+            </ul>
+        </div>
+
+
+        <!-- User Profile Dropdown -->
+        <div class="dropdown navbar-profile-dropdown">
+            <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" role="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                {% load static %}
+                {% if global_user_profile and global_user_profile.profile_photo %}
+                    <img src="{{ global_user_profile.profile_photo.url }}"
+                         class="navbar-user-avatar" alt="Avatar"
+                         style="object-fit:cover;">
+                {% else %}
+                    <div class="navbar-user-avatar d-flex align-items-center justify-content-center bg-dark text-white fw-bold"
+                         style="font-size:1rem;flex-shrink:0;">
+                        {{ request.user.username|first|upper }}
+                    </div>
+                {% endif %}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end py-2 border-0 shadow" aria-labelledby="userMenu" style="width: 180px;">
+                <li>
+                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="{% url 'profile' %}">
+                        <i class="bi bi-person fs-5"></i>
+                        <span>Profile</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="{% url 'profile' %}">
+                        <i class="bi bi-gear fs-5"></i>
+                        <span>Setting</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2" href="#" data-bs-toggle="modal" data-bs-target="#helpModal">
+                        <i class="bi bi-question-circle fs-5"></i>
+                        <span>Help</span>
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2 text-danger" href="{% url 'logout' %}">
+                        <i class="bi bi-box-arrow-right fs-5"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

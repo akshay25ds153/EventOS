@@ -1,0 +1,106 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Chat with {{ recipient.username }} | EventOS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/chat.css' %}">
+{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house-door-fill me-1"></i>Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'chat_dashboard' %}">Messages</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ recipient.username }}</li>
+{% endblock %}
+
+{% block content %}
+<!-- Chat Panel: sidebar + chat side by side (no extra page header, container fills the space) -->
+<div class="chat-container">
+    {% include 'chat/chat_sidebar.html' %}
+
+    <!-- Chat Right Panel -->
+    <div class="chat-main">
+
+        <!-- Chat Header -->
+        <div class="chat-main-header">
+            {% if recipient.profile.profile_photo %}
+                <img src="{{ recipient.profile.profile_photo.url }}"
+                     class="chat-item-avatar me-3" style="object-fit:cover;padding:0;" alt="{{ recipient.username }}">
+            {% else %}
+                <div class="chat-item-avatar me-3 bg-dark text-white fw-bold">
+                    {{ recipient.username|slice:":1"|upper }}
+                </div>
+            {% endif %}
+            <div class="chat-main-header-info">
+                <div class="chat-main-header-title">{{ recipient.username }}</div>
+                <div class="chat-main-header-subtitle">
+                    {% if recipient.email %}{{ recipient.email }}{% else %}Direct Message{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages-container" id="chatMessages">
+            {% for msg in messages_list %}
+                {% if msg.sender == request.user %}
+                    <div class="chat-message-wrapper outgoing mb-2 ms-auto" style="max-width:75%;">
+                        <div>
+                            <div class="d-flex align-items-baseline justify-content-end gap-2 mb-1">
+                                <span class="chat-msg-time">{{ msg.created_at|date:"g:i A" }}</span>
+                            </div>
+                            <div class="chat-message-bubble text-start" style="background:#18181B;color:#fff;border-radius:16px;border-bottom-right-radius:4px;">
+                                {{ msg.content|linebreaksbr }}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="chat-message-wrapper incoming mb-2 d-flex align-items-start gap-2" style="max-width:75%;">
+                        {% if msg.sender.profile.profile_photo %}
+                        <img src="{{ msg.sender.profile.profile_photo.url }}"
+                             class="chat-msg-avatar flex-shrink-0" style="object-fit:cover;padding:0;" alt="{{ msg.sender.username }}">
+                    {% else %}
+                        <div class="chat-msg-avatar flex-shrink-0">
+                            {{ msg.sender.username|slice:":1"|upper }}
+                        </div>
+                    {% endif %}
+                        <div>
+                            <div class="d-flex align-items-baseline gap-2 mb-1">
+                                <span class="fw-bold" style="font-size:0.85rem;color:#1e293b;">{{ msg.sender.username }}</span>
+                                <span class="chat-msg-time">{{ msg.created_at|date:"g:i A" }}</span>
+                            </div>
+                            <div class="chat-message-bubble" style="background:#F8FAFC;color:#1e293b;border:1px solid #F1F5F9;border-radius:16px;border-bottom-left-radius:4px;">
+                                {{ msg.content|linebreaksbr }}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% empty %}
+                <div class="text-center text-muted py-5 w-100 my-auto">
+                    <i class="bi bi-chat-heart display-4 d-block mb-3 opacity-30"></i>
+                    No messages yet — say hello!
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Input -->
+        <div class="chat-input-area">
+            <form action="{% url 'send_direct_message' recipient.id %}" method="post" class="chat-input-form">
+                {% csrf_token %}
+                <input type="text" name="content" class="chat-input-field"
+                       placeholder="Message {{ recipient.username }}..." required autocomplete="off" autofocus>
+                <button type="submit" class="btn btn-dark rounded-circle d-flex align-items-center justify-content-center"
+                        style="width:42px;height:42px;flex-shrink:0;">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var c = document.getElementById("chatMessages");
+    if (c) c.scrollTop = c.scrollHeight;
+});
+</script>
+{% endblock %}

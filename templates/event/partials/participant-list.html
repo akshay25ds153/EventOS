@@ -1,0 +1,68 @@
+<div class="card border-0 rounded-4 shadow-sm bg-white overflow-hidden mb-4">
+    <div class="px-4 py-3 border-bottom d-flex align-items-center justify-content-between" style="background:#F8FAFC;">
+        <h5 class="fw-extrabold text-dark mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-people-fill text-primary"></i> Registered Attendees
+            <span class="badge bg-dark text-white rounded-pill ms-1">{{ registered_count }} / {{ event.max_participants }}</span>
+        </h5>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+            <thead class="bg-light">
+                <tr>
+                    <th class="px-4 py-3 fw-bold text-muted text-uppercase extra-small">Member Name</th>
+                    {% if user_can_edit %}
+                        <th class="py-3 fw-bold text-muted text-uppercase extra-small">Email</th>
+                        <th class="py-3 fw-bold text-muted text-uppercase extra-small">Phone</th>
+                    {% endif %}
+                    <th class="py-3 fw-bold text-muted text-uppercase extra-small">Dept / Year</th>
+                    <th class="py-3 fw-bold text-muted text-uppercase extra-small">Role</th>
+                    <th class="py-3 fw-bold text-muted text-uppercase extra-small">Status</th>
+                    {% if user_can_edit %}
+                        <th class="py-3 pe-4 fw-bold text-muted text-uppercase extra-small text-end">Action</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in registered_members %}
+                <tr>
+                    <td class="px-4 py-3 fw-bold text-dark">{{ member.name }}</td>
+                    {% if user_can_edit %}
+                        <td class="py-3 text-muted">{{ member.email }}</td>
+                        <td class="py-3 text-muted">{{ member.phone }}</td>
+                    {% endif %}
+                    <td class="py-3 text-dark font-medium">
+                        {{ member.department }}
+                        {% if member.year %}
+                            <span class="badge bg-light text-dark border rounded-pill ms-1">Yr {{ member.year }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-3">
+                        <span class="badge rounded-pill bg-dark text-white px-2.5 py-1 fw-bold extra-small">{{ member.role }}</span>
+                    </td>
+                    <td class="py-3">
+                        <span class="badge rounded-pill px-2.5 py-1 fw-bold extra-small 
+                            {% if member.status == 'Active' %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                            {{ member.status }}
+                        </span>
+                    </td>
+                    {% if user_can_edit %}
+                        <td class="py-3 pe-4 text-end">
+                            <a href="{% url 'member_details' member.id %}" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1 fw-bold extra-small">
+                                <i class="bi bi-eye-fill"></i> View
+                            </a>
+                        </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="bi bi-people display-6 opacity-25 d-block mb-3"></i>
+                        No participants registered for this event yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

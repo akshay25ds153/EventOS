@@ -1,0 +1,33 @@
+<div class="card border-0 rounded-4 shadow-sm bg-white p-4 p-md-5 mb-4">
+    <h5 class="fw-extrabold text-dark mb-4"><i class="bi bi-clock-history text-primary me-2"></i>Event Progress Timeline</h5>
+    
+    <div class="position-relative ps-4 ms-2" style="border-left: 2px solid var(--bs-border-color, #E2E8F0);">
+        {% for node in timeline_nodes %}
+        <div class="position-relative mb-4 last-mb-0">
+            <!-- Bullet Node -->
+            <div class="position-absolute start-0 translate-middle rounded-circle border bg-white d-flex align-items-center justify-content-center" 
+                 style="width: 20px; height: 20px; left: -26px !important; top: 10px;">
+                {% if node.completed %}
+                    <div class="rounded-circle bg-success" style="width: 10px; height: 10px;"></div>
+                {% else %}
+                    <div class="rounded-circle bg-secondary opacity-50" style="width: 8px; height: 8px;"></div>
+                {% endif %}
+            </div>
+            
+            <!-- Context -->
+            <div>
+                <h6 class="fw-bold {% if node.completed %}text-dark{% else %}text-muted{% endif %} mb-1">
+                    {{ node.title }}
+                </h6>
+                <p class="text-muted extra-small mb-0">{{ node.desc }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .last-mb-0:last-child {
+        margin-bottom: 0 !important;
+    }
+</style>

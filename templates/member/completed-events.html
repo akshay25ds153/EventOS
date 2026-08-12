@@ -1,0 +1,68 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Completed Events | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">Completed Events</li>
+{% endblock %}
+
+{% block content %}
+<!-- Page Title -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Completed Events</h3>
+        <p class="text-muted small mb-0">Review metrics and reports for successfully concluded events.</p>
+    </div>
+</div>
+
+<!-- Table Card -->
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Event Name</th>
+                        <th>Category</th>
+                        <th>Venue</th>
+                        <th>End Date</th>
+                        <th>Final Attendees</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                        <tr>
+                            <td class="fw-semibold text-dark">{{ event.name }}</td>
+                            <td>{{ event.category.name }}</td>
+                            <td>{{ event.venue }}</td>
+                            <td>{{ event.end_date }}</td>
+                            <td>
+                                <strong class="text-dark">{{ event.members.count }}</strong> <span class="text-muted">/ {{ event.max_participants }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light-primary text-primary">
+                                    {{ event.status }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'event_details' event.id %}" class="btn btn-sm btn-outline-secondary px-2"><i class="bi bi-eye"></i> View Details</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-5">
+                                <i class="bi bi-patch-check display-4 d-block mb-3 text-muted" style="opacity: 0.5;"></i>
+                                No completed events recorded yet.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

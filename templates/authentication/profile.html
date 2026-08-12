@@ -1,0 +1,334 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}My Profile | EventSphere{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house-door-fill me-1"></i>Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">Profile</li>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="fw-bold tracking-tight text-dark mb-1">
+            My {% if request.user.is_staff %}Administrator{% else %}Member{% endif %} Profile
+        </h1>
+        <p class="text-muted mb-0">Manage credentials, theme settings, notifications, and access preferences.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+
+    <!-- Left: Profile Summary Info Card -->
+    <div class="col-lg-4 col-md-5">
+        <div class="card border-0 rounded-4 shadow-sm bg-white p-4 text-center">
+            <div class="mb-3 d-inline-block position-relative mx-auto" style="width:110px;height:110px;">
+                {% if user_profile.photo_url %}
+                    <img id="profilePhotoDisplay" src="{{ user_profile.photo_url }}"
+                         class="shadow-sm" alt="Profile Photo"
+                         style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:4px solid #F1F5F9;">
+                {% else %}
+                    <div id="profilePhotoDisplay" class="bg-dark text-white d-flex align-items-center justify-content-center shadow-sm fw-bold"
+                         style="width:110px;height:110px;border-radius:50%;font-size:2.5rem;border:4px solid #F1F5F9;">
+                        {{ request.user.username|first|upper }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <h4 class="fw-bold text-dark mb-1">
+                {{ request.user.get_full_name|default:request.user.username }}
+            </h4>
+            <p class="text-muted extra-small mb-2"><i class="bi bi-shield-lock-fill me-1"></i>{{ user_profile.get_role_display|default:user_profile.role|capfirst }}</p>
+
+            {% if user_profile.phone %}
+                <p class="text-muted small mb-1"><i class="bi bi-telephone me-1"></i>{{ user_profile.phone }}</p>
+            {% endif %}
+            
+            {% if user_profile.bio %}
+                <p class="text-muted small mb-4 px-2">{{ user_profile.bio }}</p>
+            {% else %}
+                <p class="text-muted small mb-4">Managing platform events, categories, and registered memberships.</p>
+            {% endif %}
+
+            <hr class="my-3 text-muted opacity-15">
+
+            <div class="d-grid gap-2">
+                <a href="{% url 'logout' %}" class="btn btn-light border text-danger rounded-pill py-2 px-3 fw-semibold d-inline-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Account tabs settings -->
+    <div class="col-lg-8 col-md-7">
+        <div class="card border-0 rounded-4 shadow-sm bg-white p-4 h-100">
+            <!-- Tabs Menu -->
+            <ul class="nav nav-tabs border-bottom-0 mb-4 g-2" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold text-dark px-3 py-2 border-0 rounded-pill me-2 small" id="general-tab" data-bs-toggle="tab" data-bs-target="#general-panel" type="button" role="tab" aria-controls="general-panel" aria-selected="true">
+                        <i class="bi bi-person-fill me-1"></i> General
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-muted px-3 py-2 border-0 rounded-pill me-2 small" id="appearance-tab" data-bs-toggle="tab" data-bs-target="#appearance-panel" type="button" role="tab" aria-controls="appearance-panel" aria-selected="false">
+                        <i class="bi bi-palette-fill me-1"></i> Appearance
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-muted px-3 py-2 border-0 rounded-pill me-2 small" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications-panel" type="button" role="tab" aria-controls="notifications-panel" aria-selected="false">
+                        <i class="bi bi-bell-fill me-1"></i> Preferences
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-muted px-3 py-2 border-0 rounded-pill small" id="security-tab" data-bs-toggle="tab" data-bs-target="#security-panel" type="button" role="tab" aria-controls="security-panel" aria-selected="false">
+                        <i class="bi bi-shield-lock-fill me-1"></i> Security
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tabs Content -->
+            <div class="tab-content" id="profileTabsContent">
+                
+                <!-- Tab: General Settings -->
+                <div class="tab-pane fade show active" id="general-panel" role="tabpanel" aria-labelledby="general-tab">
+                    <form action="{% url 'profile' %}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="edit_profile" value="1">
+                        
+                        <!-- Profile fields -->
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <label for="id_first_name" class="form-label fw-bold text-dark small">First Name</label>
+                                <input type="text" name="first_name" id="id_first_name" class="form-control" value="{{ request.user.first_name }}">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="id_last_name" class="form-label fw-bold text-dark small">Last Name</label>
+                                <input type="text" name="last_name" id="id_last_name" class="form-control" value="{{ request.user.last_name }}">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="id_username" class="form-label fw-bold text-dark small">Username</label>
+                                <input type="text" id="id_username" class="form-control bg-light" value="{{ request.user.username }}" readonly>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="id_email" class="form-label fw-bold text-dark small">Email Address</label>
+                                <input type="email" name="email" id="id_email" class="form-control" value="{{ request.user.email }}" required>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="id_phone" class="form-label fw-bold text-dark small">Phone Number</label>
+                                <input type="text" name="phone" id="id_phone" class="form-control" value="{{ user_profile.phone }}">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="id_profile_photo" class="form-label fw-bold text-dark small">Profile Photo</label>
+                                <input type="file" name="profile_photo" id="id_profile_photo" class="form-control" accept="image/*">
+                            </div>
+                            <div class="col-12">
+                                <label for="id_bio" class="form-label fw-bold text-dark small">Bio</label>
+                                <textarea name="bio" id="id_bio" class="form-control" rows="3">{{ user_profile.bio }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Keep hidden input preferences values to avoid resetting them -->
+                        <input type="hidden" name="theme_preference" value="{{ user_profile.theme_preference }}">
+                        <input type="hidden" name="accent_color" value="{{ user_profile.accent_color }}">
+                        <input type="hidden" name="font" value="{{ user_profile.font }}">
+                        <input type="hidden" name="border_radius" value="{{ user_profile.border_radius }}">
+                        {% if user_profile.compact_mode %}<input type="hidden" name="compact_mode" value="1">{% endif %}
+                        {% if user_profile.animations_enabled %}<input type="hidden" name="animations_enabled" value="1">{% endif %}
+                        {% if user_profile.reduced_motion %}<input type="hidden" name="reduced_motion" value="1">{% endif %}
+                        <input type="hidden" name="timezone" value="{{ user_profile.timezone }}">
+                        <input type="hidden" name="language" value="{{ user_profile.language }}">
+                        {% if user_profile.notifications_enabled %}<input type="hidden" name="notifications_enabled" value="1">{% endif %}
+
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+                            <button type="submit" class="btn btn-dark rounded-pill px-5 fw-bold">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tab: Appearance Settings -->
+                <div class="tab-pane fade" id="appearance-panel" role="tabpanel" aria-labelledby="appearance-tab">
+                    <form action="{% url 'profile' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="edit_profile" value="1">
+                        
+                        <!-- Keep General Info -->
+                        <input type="hidden" name="first_name" value="{{ request.user.first_name }}">
+                        <input type="hidden" name="last_name" value="{{ request.user.last_name }}">
+                        <input type="hidden" name="email" value="{{ request.user.email }}">
+                        <input type="hidden" name="phone" value="{{ user_profile.phone }}">
+                        <input type="hidden" name="bio" value="{{ user_profile.bio }}">
+
+                        <div class="row g-4">
+                            <!-- Theme Preference -->
+                            <div class="col-sm-6">
+                                <label for="theme_preference" class="form-label fw-bold text-dark small">Theme Preference</label>
+                                <select name="theme_preference" id="theme_preference" class="form-select">
+                                    <option value="light" {% if user_profile.theme_preference == 'light' %}selected{% endif %}>Light</option>
+                                    <option value="dark" {% if user_profile.theme_preference == 'dark' %}selected{% endif %}>Dark</option>
+                                    <option value="system" {% if user_profile.theme_preference == 'system' %}selected{% endif %}>System</option>
+                                </select>
+                            </div>
+
+                            <!-- Accent Color -->
+                            <div class="col-sm-6">
+                                <label for="accent_color" class="form-label fw-bold text-dark small">Accent Color</label>
+                                <select name="accent_color" id="accent_color" class="form-select">
+                                    <option value="indigo" {% if user_profile.accent_color == 'indigo' %}selected{% endif %}>Indigo</option>
+                                    <option value="ocean" {% if user_profile.accent_color == 'ocean' %}selected{% endif %}>Ocean Blue</option>
+                                    <option value="teal" {% if user_profile.accent_color == 'teal' %}selected{% endif %}>Teal</option>
+                                    <option value="rose" {% if user_profile.accent_color == 'rose' %}selected{% endif %}>Rose</option>
+                                    <option value="violet" {% if user_profile.accent_color == 'violet' %}selected{% endif %}>Violet</option>
+                                    <option value="emerald" {% if user_profile.accent_color == 'emerald' %}selected{% endif %}>Emerald</option>
+                                </select>
+                            </div>
+
+                            <!-- Font Style -->
+                            <div class="col-sm-6">
+                                <label for="font" class="form-label fw-bold text-dark small">Typography Font</label>
+                                <select name="font" id="font" class="form-select">
+                                    <option value="plus-jakarta" {% if user_profile.font == 'plus-jakarta' %}selected{% endif %}>Plus Jakarta Sans</option>
+                                    <option value="inter" {% if user_profile.font == 'inter' %}selected{% endif %}>Inter</option>
+                                    <option value="poppins" {% if user_profile.font == 'poppins' %}selected{% endif %}>Poppins</option>
+                                    <option value="outfit" {% if user_profile.font == 'outfit' %}selected{% endif %}>Outfit</option>
+                                </select>
+                            </div>
+
+                            <!-- Border Radius -->
+                            <div class="col-sm-6">
+                                <label for="border_radius" class="form-label fw-bold text-dark small">Corner Border Radius</label>
+                                <select name="border_radius" id="border_radius" class="form-select">
+                                    <option value="sharp" {% if user_profile.border_radius == 'sharp' %}selected{% endif %}>Sharp (0px)</option>
+                                    <option value="rounded" {% if user_profile.border_radius == 'rounded' %}selected{% endif %}>Rounded (8px)</option>
+                                    <option value="extra-rounded" {% if user_profile.border_radius == 'extra-rounded' %}selected{% endif %}>Extra Rounded (16px)</option>
+                                </select>
+                            </div>
+
+                            <!-- Checkbox Toggles -->
+                            <div class="col-12">
+                                <div class="d-flex flex-column gap-2 mt-2">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="compact_mode" id="id_compact_mode" {% if user_profile.compact_mode %}checked{% endif %}>
+                                        <label class="form-check-label fw-semibold text-dark small" for="id_compact_mode">Compact Mode (reduces paddings and margins)</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="animations_enabled" id="id_animations_enabled" {% if user_profile.animations_enabled %}checked{% endif %}>
+                                        <label class="form-check-label fw-semibold text-dark small" for="id_animations_enabled">Enable UI Micro-Animations</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="reduced_motion" id="id_reduced_motion" {% if user_profile.reduced_motion %}checked{% endif %}>
+                                        <label class="form-check-label fw-semibold text-dark small" for="id_reduced_motion">Reduced Motion (minimizes layout movements)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Keep hidden input settings values to avoid resetting them -->
+                        <input type="hidden" name="timezone" value="{{ user_profile.timezone }}">
+                        <input type="hidden" name="language" value="{{ user_profile.language }}">
+                        {% if user_profile.notifications_enabled %}<input type="hidden" name="notifications_enabled" value="1">{% endif %}
+
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+                            <button type="submit" class="btn btn-dark rounded-pill px-5 fw-bold">Apply Style</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tab: Preferences Settings -->
+                <div class="tab-pane fade" id="notifications-panel" role="tabpanel" aria-labelledby="notifications-tab">
+                    <form action="{% url 'profile' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="edit_profile" value="1">
+
+                        <!-- Keep General Info -->
+                        <input type="hidden" name="first_name" value="{{ request.user.first_name }}">
+                        <input type="hidden" name="last_name" value="{{ request.user.last_name }}">
+                        <input type="hidden" name="email" value="{{ request.user.email }}">
+                        <input type="hidden" name="phone" value="{{ user_profile.phone }}">
+                        <input type="hidden" name="bio" value="{{ user_profile.bio }}">
+
+                        <!-- Keep styling variables -->
+                        <input type="hidden" name="theme_preference" value="{{ user_profile.theme_preference }}">
+                        <input type="hidden" name="accent_color" value="{{ user_profile.accent_color }}">
+                        <input type="hidden" name="font" value="{{ user_profile.font }}">
+                        <input type="hidden" name="border_radius" value="{{ user_profile.border_radius }}">
+                        {% if user_profile.compact_mode %}<input type="hidden" name="compact_mode" value="1">{% endif %}
+                        {% if user_profile.animations_enabled %}<input type="hidden" name="animations_enabled" value="1">{% endif %}
+                        {% if user_profile.reduced_motion %}<input type="hidden" name="reduced_motion" value="1">{% endif %}
+
+                        <div class="row g-4">
+                            <!-- Timezone -->
+                            <div class="col-sm-6">
+                                <label for="timezone" class="form-label fw-bold text-dark small">Timezone</label>
+                                <input type="text" name="timezone" id="timezone" class="form-control" value="{{ user_profile.timezone }}">
+                            </div>
+
+                            <!-- Language -->
+                            <div class="col-sm-6">
+                                <label for="language" class="form-label fw-bold text-dark small">Language Code</label>
+                                <input type="text" name="language" id="language" class="form-control" value="{{ user_profile.language }}">
+                            </div>
+
+                            <!-- Role display -->
+                            <div class="col-sm-6">
+                                <label class="form-label fw-bold text-dark small">Role Clearance</label>
+                                <input type="text" class="form-control bg-light" value="{{ user_profile.get_role_display|default:user_profile.role|capfirst }}" readonly>
+                            </div>
+
+                            <!-- Notifications toggle -->
+                            <div class="col-12">
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" name="notifications_enabled" id="id_notifications_enabled" {% if user_profile.notifications_enabled %}checked{% endif %}>
+                                    <label class="form-check-label fw-semibold text-dark small" for="id_notifications_enabled">Enable System Notifications & Alert Emails</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+                            <button type="submit" class="btn btn-dark rounded-pill px-5 fw-bold">Save Preferences</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tab: Security Settings -->
+                <div class="tab-pane fade" id="security-panel" role="tabpanel" aria-labelledby="security-tab">
+                    <form action="{% url 'profile' %}" method="POST" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="change_password" value="1">
+                        
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-dark small mb-3">Update Account Password</h6>
+                            {{ pass_form|crispy }}
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+                            <button type="submit" class="btn btn-dark rounded-pill px-5 fw-bold">Update Password</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    /* Styling adjustments for the tabs dashboard */
+    #profileTabs .nav-link {
+        transition: all 0.2s ease;
+    }
+    #profileTabs .nav-link.active {
+        background-color: var(--primary-color) !important;
+        color: #FFFFFF !important;
+    }
+    #profileTabs .nav-link:not(.active):hover {
+        background-color: var(--bg-canvas) !important;
+        color: var(--text-main) !important;
+    }
+</style>
+{% endblock %}

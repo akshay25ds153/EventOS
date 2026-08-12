@@ -1,0 +1,13 @@
+Django
+Pillow
+django-crispy-forms
+crispy-bootstrap5
+whitenoise
+python-dotenv
+djangorestframework
+celery
+redis
+gunicorn
+psycopg2-binary
+qrcode
+reportlab

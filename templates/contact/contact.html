@@ -1,0 +1,132 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Contact & Support | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house-door-fill me-1"></i>Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">Contact</li>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="fw-bold tracking-tight text-dark mb-1">Contact & Support</h1>
+        <p class="text-muted mb-0">Get in touch with the EventOS support desk or submit an inquiry.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    
+    <!-- Left Column: Support info cards -->
+    <div class="col-lg-5 col-md-6">
+        
+        <!-- Quick Support Box -->
+        <div class="card border-0 rounded-4 shadow-sm bg-white p-4 mb-4">
+            <h5 class="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
+                <i class="bi bi-headset text-dark fs-4"></i>
+                <span>Support Channels</span>
+            </h5>
+            
+            <div class="p-3 rounded-4 bg-light border border-light-subtle d-flex align-items-start gap-3 mb-3">
+                <div class="bg-white rounded-circle shadow-sm p-3 d-flex align-items-center justify-content-center text-dark" style="width: 44px; height: 44px; flex-shrink: 0;">
+                    <i class="bi bi-telephone-fill fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-dark mb-1">Helpline Phone</h6>
+                    <p class="text-muted small mb-0">+91 8921027269</p>
+                </div>
+            </div>
+
+            <div class="p-3 rounded-4 bg-light border border-light-subtle d-flex align-items-start gap-3 mb-3">
+                <div class="bg-white rounded-circle shadow-sm p-3 d-flex align-items-center justify-content-center text-dark" style="width: 44px; height: 44px; flex-shrink: 0;">
+                    <i class="bi bi-envelope-fill fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-dark mb-1">Email Support</h6>
+                    <p class="text-muted small mb-0">support@eventmanagement.com</p>
+                </div>
+            </div>
+
+            <div class="p-3 rounded-4 bg-light border border-light-subtle d-flex align-items-start gap-3">
+                <div class="bg-white rounded-circle shadow-sm p-3 d-flex align-items-center justify-content-center text-dark" style="width: 44px; height: 44px; flex-shrink: 0;">
+                    <i class="bi bi-geo-alt-fill fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-dark mb-1">HQ Campus Location</h6>
+                    <p class="text-muted small mb-0">Aadhil's Office, Kerala, India</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hours Box -->
+        <div class="card border-0 rounded-4 shadow-sm bg-white p-4">
+            <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-clock-fill text-dark"></i>
+                <span>Operating Hours</span>
+            </h5>
+            <div class="p-3 rounded-4 bg-light border border-light-subtle">
+                <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+                    <span class="text-muted fw-semibold small">Monday - Friday:</span>
+                    <span class="fw-bold text-dark small">09:00 AM - 05:00 PM</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+                    <span class="text-muted fw-semibold small">Saturday:</span>
+                    <span class="fw-bold text-dark small">09:00 AM - 01:00 PM</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-between py-2">
+                    <span class="text-muted fw-semibold small">Sunday:</span>
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1 fw-semibold small">Closed</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Column: Submission Form -->
+    <div class="col-lg-7 col-md-6">
+        <div class="card border-0 rounded-4 shadow-sm bg-white p-4 p-md-5 h-100">
+            <h5 class="fw-bold text-dark mb-4 d-flex align-items-center gap-2 pb-3 border-bottom">
+                <i class="bi bi-send-fill text-dark"></i>
+                <span>Submit Support Ticket</span>
+            </h5>
+
+            <form action="{% url 'contact' %}" method="POST" novalidate>
+                {% csrf_token %}
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        {{ form.name|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.email|as_crispy_field }}
+                    </div>
+                    
+                    <div class="col-12">
+                        {{ form.subject|as_crispy_field }}
+                    </div>
+                    
+                    <div class="col-12">
+                        {{ form.message|as_crispy_field }}
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex align-items-center justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <button type="reset" class="btn btn-light border rounded-pill px-4 py-2 fw-semibold">
+                        Reset Form
+                    </button>
+                    <button type="submit" class="btn btn-dark rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-send-fill"></i>
+                        <span>Send Message</span>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

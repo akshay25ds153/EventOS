@@ -1,0 +1,342 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Check-in Scanner | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active" aria-current="page">QR Check-in</li>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-5">
+    <!-- Left column: Live camera scanner -->
+    <div class="col-lg-7">
+        <div class="card-aether-white p-4 h-100 rounded-4 shadow-sm">
+            <h4 class="fw-extrabold text-dark mb-1">Check-in Terminal</h4>
+            <p class="text-muted small mb-4">Select check-in hardware to begin scanning attendee passes in real-time.</p>
+            
+            <!-- Camera selection control row -->
+            <div class="row g-3 align-items-center mb-4">
+                <div class="col-md-8">
+                    <label class="form-label fw-bold extra-small text-muted text-uppercase mb-1">Select Active Camera</label>
+                    <select id="cameraSelect" class="form-select rounded-pill"></select>
+                </div>
+                <div class="col-md-4 d-flex gap-2 align-self-end">
+                    <button id="startScanBtn" class="btn btn-dark rounded-pill w-100 fw-bold px-3 py-2 small shadow-sm">
+                        <i class="bi bi-camera-video-fill me-1"></i> Start
+                    </button>
+                    <button id="stopScanBtn" class="btn btn-outline-danger rounded-pill w-100 fw-bold px-3 py-2 small" disabled>
+                        <i class="bi bi-stop-circle me-1"></i> Stop
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Viewfinder canvas box -->
+            <div class="position-relative overflow-hidden rounded-3 border bg-dark d-flex align-items-center justify-content-center" style="min-height: 380px;">
+                <div id="reader" style="width: 100%;"></div>
+                
+                <!-- Viewfinder overlay grid guides -->
+                <div id="scannerOverlay" class="position-absolute w-100 h-100 d-none flex-column align-items-center justify-content-center" style="background: rgba(0,0,0,0.4); pointer-events: none; top:0; left:0;">
+                    <div style="width: 250px; height: 250px; border: 4px solid #fff; border-radius: 20px; box-shadow: 0 0 0 4000px rgba(0,0,0,0.5); animation: pulseGuides 1.5s infinite; position: relative;">
+                        <!-- Scanner laser line -->
+                        <div style="position: absolute; width: 100%; height: 3px; background: #dc3545; top: 0; left: 0; box-shadow: 0 0 8px #dc3545; animation: scannerLaser 2s linear infinite;"></div>
+                    </div>
+                    <span class="text-white extra-small fw-bold mt-4 tracking-wider">ALIGN PASS QR WITHIN GUIDES</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right column: Scan logs and stats -->
+    <div class="col-lg-5">
+        <div class="card-aether-white p-4 h-100 rounded-4 shadow-sm d-flex flex-column justify-content-between">
+            <div>
+                <h4 class="fw-extrabold text-dark mb-1">Scanner Logs</h4>
+                <p class="text-muted small mb-4">Immediate validation feedback details from recent terminal scans.</p>
+                
+                <!-- Status sheet displays -->
+                <div id="scanStatusCard" class="p-4 border rounded-3 text-center mb-4 bg-light">
+                    <div id="statusIcon" class="mb-3 d-inline-flex align-items-center justify-content-center rounded-circle text-secondary bg-secondary-subtle" style="width: 60px; height: 60px;">
+                        <i class="bi bi-qr-code-scan fs-2"></i>
+                    </div>
+                    <h5 id="statusHeader" class="fw-extrabold text-dark mb-1">Awaiting Scan</h5>
+                    <p id="statusMsg" class="text-muted small mb-0">System ready. Align a ticket QR code within the viewfinder guides to perform check-in.</p>
+                </div>
+                
+                <!-- Registration summary section -->
+                <div id="attendeeSummary" class="border rounded-3 p-3 bg-light d-none mb-4">
+                    <h6 class="fw-extrabold text-dark mb-3 border-bottom pb-2">Attendee Pass Details</h6>
+                    <div class="row g-2 extra-small text-muted">
+                        <div class="col-5 text-uppercase fw-bold text-dark">Name:</div>
+                        <div id="logName" class="col-7">Jane Doe</div>
+                        
+                        <div class="col-5 text-uppercase fw-bold text-dark">Event Name:</div>
+                        <div id="logEvent" class="col-7">Hackathon</div>
+                        
+                        <div class="col-5 text-uppercase fw-bold text-dark">Registration No:</div>
+                        <div id="logReg" class="col-7">REG-12345</div>
+                        
+                        <div class="col-5 text-uppercase fw-bold text-dark">Check-in Time:</div>
+                        <div id="logTime" class="col-7">N/A</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Statistics quick counters -->
+            <div class="border-top pt-4">
+                <div class="row text-center g-2">
+                    <div class="col-6 border-end">
+                        <span class="d-block display-6 fw-extrabold text-dark" id="successScanCount">0</span>
+                        <span class="text-muted extra-small text-uppercase fw-bold">Valid Checkins</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="d-block display-6 fw-extrabold text-danger" id="failedScanCount">0</span>
+                        <span class="text-muted extra-small text-uppercase fw-bold">Invalid Scans</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- html5-qrcode library loader -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const cameraSelect = document.getElementById("cameraSelect");
+    const startScanBtn = document.getElementById("startScanBtn");
+    const stopScanBtn = document.getElementById("stopScanBtn");
+    const scannerOverlay = document.getElementById("scannerOverlay");
+    
+    // Status display elements
+    const scanStatusCard = document.getElementById("scanStatusCard");
+    const statusIcon = document.getElementById("statusIcon");
+    const statusHeader = document.getElementById("statusHeader");
+    const statusMsg = document.getElementById("statusMsg");
+    
+    // Summary elements
+    const attendeeSummary = document.getElementById("attendeeSummary");
+    const logName = document.getElementById("logName");
+    const logEvent = document.getElementById("logEvent");
+    const logReg = document.getElementById("logReg");
+    const logTime = document.getElementById("logTime");
+    
+    // Counter elements
+    const successScanCount = document.getElementById("successScanCount");
+    const failedScanCount = document.getElementById("failedScanCount");
+    
+    let html5QrCode;
+    let qrScannerStarted = false;
+    let lastScannedCode = null;
+    let scanningCooldown = false;
+    
+    let successCount = 0;
+    let failedCount = 0;
+
+    // Load available camera hardware options
+    Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+            devices.forEach(device => {
+                const option = document.createElement("option");
+                option.value = device.id;
+                option.text = device.label || `Camera ${cameraSelect.length + 1}`;
+                cameraSelect.appendChild(option);
+            });
+        } else {
+            cameraSelect.innerHTML = '<option value="">No camera devices detected</option>';
+            startScanBtn.disabled = true;
+        }
+    }).catch(err => {
+        console.error("Error accessing camera info: ", err);
+        cameraSelect.innerHTML = '<option value="">Camera access error</option>';
+        startScanBtn.disabled = true;
+    });
+
+    startScanBtn.addEventListener("click", function() {
+        const cameraId = cameraSelect.value;
+        if (!cameraId) return;
+        
+        html5QrCode = new Html5Qrcode("reader");
+        scannerOverlay.classList.remove("d-none");
+        scannerOverlay.classList.add("d-flex");
+        
+        html5QrCode.start(
+            cameraId, 
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            },
+            onScanSuccess,
+            onScanFailure
+        ).then(() => {
+            qrScannerStarted = true;
+            startScanBtn.disabled = true;
+            cameraSelect.disabled = true;
+            stopScanBtn.disabled = false;
+            resetStatus();
+        }).catch(err => {
+            console.error("Unable to start scanning: ", err);
+            alert("Could not start camera scanner. Please grant camera permissions.");
+        });
+    });
+
+    stopScanBtn.addEventListener("click", function() {
+        if (html5QrCode && qrScannerStarted) {
+            html5QrCode.stop().then(() => {
+                qrScannerStarted = false;
+                startScanBtn.disabled = false;
+                cameraSelect.disabled = false;
+                stopScanBtn.disabled = true;
+                scannerOverlay.classList.remove("d-flex");
+                scannerOverlay.classList.add("d-none");
+                resetStatus();
+            }).catch(err => console.error("Error stopping scanner: ", err));
+        }
+    });
+
+    function onScanSuccess(decodedText, decodedResult) {
+        if (scanningCooldown || decodedText === lastScannedCode) {
+            return; // Ignore repeated readings during cooldown or matches
+        }
+        
+        scanningCooldown = true;
+        lastScannedCode = decodedText;
+        
+        // Visual indication
+        setLoadingStatus();
+        
+        // Send to REST API endpoint
+        fetch("/api/checkin/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCsrfToken()
+            },
+            body: JSON.stringify({ uuid: decodedText })
+        })
+        .then(response => response.json().then(data => ({ status: response.status, body: data })))
+        .then(res => {
+            if (res.status === 200) {
+                // Success
+                successCount++;
+                successScanCount.textContent = successCount;
+                setSuccessStatus(res.body);
+            } else {
+                // Failure
+                failedCount++;
+                failedScanCount.textContent = failedCount;
+                setFailureStatus(res.body.message || "Invalid ticket scan.");
+            }
+            
+            // Cooldown release after 3 seconds
+            setTimeout(() => {
+                scanningCooldown = false;
+                // Only reset the code memory on failure so a successful ticket check-in is not scanned again
+                if (res.status !== 200) {
+                    lastScannedCode = null;
+                }
+            }, 3000);
+        })
+        .catch(err => {
+            console.error("AJAX checkin failed: ", err);
+            failedCount++;
+            failedScanCount.textContent = failedCount;
+            setFailureStatus("Connection or Server error.");
+            
+            setTimeout(() => {
+                scanningCooldown = false;
+                lastScannedCode = null;
+            }, 3000);
+        });
+    }
+
+    function onScanFailure(error) {
+        // Quietly fail or log debug
+    }
+
+    function getCsrfToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function resetStatus() {
+        scanStatusCard.className = "p-4 border rounded-3 text-center mb-4 bg-light";
+        statusIcon.className = "mb-3 d-inline-flex align-items-center justify-content-center rounded-circle text-secondary bg-secondary-subtle";
+        statusIcon.innerHTML = '<i class="bi bi-qr-code-scan fs-2"></i>';
+        statusHeader.textContent = "Awaiting Scan";
+        statusHeader.className = "fw-extrabold text-dark mb-1";
+        statusMsg.textContent = "System ready. Align a ticket QR code within the viewfinder guides to perform check-in.";
+        attendeeSummary.classList.add("d-none");
+        lastScannedCode = null; // Clear scan memory cache on state reset
+    }
+
+    function setLoadingStatus() {
+        scanStatusCard.className = "p-4 border rounded-3 text-center mb-4 bg-warning-subtle text-warning border-warning";
+        statusIcon.className = "mb-3 d-inline-flex align-items-center justify-content-center rounded-circle text-warning bg-warning border border-warning";
+        statusIcon.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div>';
+        statusHeader.textContent = "Processing Pass...";
+        statusHeader.className = "fw-extrabold text-warning-emphasis mb-1";
+        statusMsg.textContent = "Querying credentials and checking for double bookings...";
+        attendeeSummary.classList.add("d-none");
+    }
+
+    function setSuccessStatus(data) {
+        scanStatusCard.className = "p-4 border rounded-3 text-center mb-4 bg-success-subtle border-success text-success";
+        statusIcon.className = "mb-3 d-inline-flex align-items-center justify-content-center rounded-circle text-white bg-success";
+        statusIcon.innerHTML = '<i class="bi bi-check-circle-fill fs-2"></i>';
+        statusHeader.textContent = "Access Granted";
+        statusHeader.className = "fw-extrabold text-success-emphasis mb-1";
+        statusMsg.textContent = data.message || "Attendee successfully checked in.";
+        
+        // Show attendee credentials
+        logName.textContent = data.member_name;
+        logEvent.textContent = data.event_name;
+        logReg.textContent = data.registration_number;
+        logTime.textContent = data.check_in_time;
+        attendeeSummary.classList.remove("d-none");
+        
+        // Trigger simple sound check (optional)
+        try {
+            const synth = window.speechSynthesis;
+            const utterThis = new SpeechSynthesisUtterance("Welcome, " + data.member_name);
+            synth.speak(utterThis);
+        } catch(e) {}
+    }
+
+    function setFailureStatus(message) {
+        scanStatusCard.className = "p-4 border rounded-3 text-center mb-4 bg-danger-subtle border-danger text-danger";
+        statusIcon.className = "mb-3 d-inline-flex align-items-center justify-content-center rounded-circle text-white bg-danger";
+        statusIcon.innerHTML = '<i class="bi bi-x-circle-fill fs-2"></i>';
+        statusHeader.textContent = "Access Denied";
+        statusHeader.className = "fw-extrabold text-danger-emphasis mb-1";
+        statusMsg.textContent = message;
+        attendeeSummary.classList.add("d-none");
+    }
+});
+</script>
+
+<style>
+@keyframes pulseGuides {
+    0% { transform: scale(1); border-color: rgba(255,255,255,0.7); }
+    50% { transform: scale(1.02); border-color: rgba(255,255,255,1); }
+    100% { transform: scale(1); border-color: rgba(255,255,255,0.7); }
+}
+@keyframes scannerLaser {
+    0% { top: 0%; }
+    50% { top: 100%; }
+    100% { top: 0%; }
+}
+</style>
+{% endblock %}

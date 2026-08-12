@@ -1,0 +1,69 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit Sponsor | EventSphere{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'sponsor_list' %}">Sponsors</a></li>
+<li class="breadcrumb-item active" aria-current="page">Edit Sponsor</li>
+{% endblock %}
+
+{% block content %}
+<!-- Page Title -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Edit Sponsor</h3>
+        <p class="text-muted small mb-0">Modify information for sponsor: {{ sponsor.name }}</p>
+    </div>
+    <div>
+        <a href="{% url 'sponsor_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+            Cancel
+        </a>
+    </div>
+</div>
+
+<!-- Form Card -->
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-4 p-md-5">
+        <form action="{% url 'edit_sponsor' sponsor.id %}" method="POST" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    {{ form.name|as_crispy_field }}
+                </div>
+                <div class="col-md-6">
+                    {{ form.website|as_crispy_field }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.contact_person|as_crispy_field }}
+                </div>
+                <div class="col-md-6">
+                    {{ form.email|as_crispy_field }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form.phone|as_crispy_field }}
+                </div>
+                <div class="col-md-6">
+                    {{ form.logo|as_crispy_field }}
+                </div>
+
+                <div class="col-12">
+                    {{ form.description|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                <button type="submit" class="btn btn-dark rounded-pill px-5 fw-bold">
+                    <i class="bi bi-check2 me-2"></i>Update Sponsor
+                </button>
+            </div>
+            
+        </form>
+    </div>
+</div>
+{% endblock %}

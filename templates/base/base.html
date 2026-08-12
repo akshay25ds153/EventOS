@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en" 
+      data-theme="{{ user_theme }}" 
+      data-accent="{{ user_accent }}" 
+      data-font="{{ user_font }}"
+      data-radius="{{ user_border_radius }}"
+      data-compact="{{ user_compact|yesno:'true,false' }}"
+      data-animations="{{ user_animations|yesno:'true,false' }}"
+      data-motion="{{ user_reduced_motion|yesno:'true,false' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EventOS{% endblock %}</title>
+    <!-- Google Fonts (Inter, Roboto, Poppins, Outfit, Playfair Display, Fira Code) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Poppins:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Fira+Code:wght@400;500&display=swap">
+    <!-- Bootstrap 5 CSS CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Bootstrap Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Custom CSS (Dynamic Django paths) -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=1.3">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+    <link rel="stylesheet" href="{% static 'css/forms.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dark-mode.css' %}?v=1.1">
+    
+    <script>
+        window.EMS_AUTH = {% if request.user.is_authenticated %}true{% else %}false{% endif %};
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% if user_theme == 'dark' %}dark-mode{% endif %} {% if user_compact %}compact-theme{% endif %}">
+
+    <!-- Desktop Sidebar (Persistent) -->
+    <aside class="sidebar-desktop d-none d-lg-flex">
+        {% include 'base/sidebar.html' %}
+    </aside>
+
+    <!-- Mobile Sidebar (Offcanvas) -->
+    <div class="offcanvas offcanvas-start offcanvas-sidebar d-lg-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+        <div class="offcanvas-header border-bottom py-3">
+            <h5 class="offcanvas-title fw-bold text-dark d-flex align-items-center gap-2" id="mobileSidebarLabel">
+                <i class="bi bi-calendar-event-fill text-primary"></i>
+                <span>EventOS</span>
+            </h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            {% include 'base/sidebar.html' %}
+        </div>
+    </div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Top Navbar -->
+        {% include 'base/navbar.html' %}
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Alert Messages Container -->
+            {% include 'base/messages.html' %}
+            
+            <!-- Django Block Content -->
+            {% block content %}{% endblock %}
+        </main>
+        
+        <!-- Footer -->
+        {% include 'base/footer.html' %}
+    </div>
+
+    <!-- Customize Theme Offcanvas Drawer -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="themeCustomizeDrawer" aria-labelledby="themeCustomizeDrawerLabel" style="width: 300px;">
+        <div class="offcanvas-header border-bottom py-3">
+            <h5 class="offcanvas-title fw-bold text-dark d-flex align-items-center gap-2" id="themeCustomizeDrawerLabel">
+                <i class="bi bi-sliders text-dark"></i>
+                <span>Personalize</span>
+            </h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body pt-4">
+
+            <!-- 0. Dark Mode Toggle -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0 small d-flex align-items-center gap-2">
+                            <i class="bi bi-moon-stars-fill" style="color: #6366F1;"></i> Dark Mode
+                        </h6>
+                        <p class="text-muted extra-small mb-0">Switch to a dark interface</p>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" id="darkModeToggle" style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4 opacity-15">
+
+            <!-- 1. Compact Mode Toggle -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0 small">Compact Mode</h6>
+                        <p class="text-muted extra-small mb-0">Denser layout with reduced padding</p>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" id="compactModeToggle" style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4 opacity-15">
+
+            <!-- 2. Accent Brand Color -->
+            <div class="mb-4">
+                <h6 class="fw-bold text-dark mb-1 small">Accent Color</h6>
+                <p class="text-muted extra-small mb-3">Applied to icons, links &amp; active states</p>
+                <div class="d-flex flex-wrap gap-2" id="accentSwatchGrid">
+                    <button class="color-swatch-btn rounded-circle" type="button" data-accent="#2563EB" title="Ocean Blue" style="background-color: #2563EB; width: 32px; height: 32px; border: 2.5px solid transparent;"></button>
+                    <button class="color-swatch-btn rounded-circle" type="button" data-accent="#4F46E5" title="Indigo" style="background-color: #4F46E5; width: 32px; height: 32px; border: 2.5px solid transparent;"></button>
+                    <button class="color-swatch-btn rounded-circle" type="button" data-accent="#8B5CF6" title="Violet" style="background-color: #8B5CF6; width: 32px; height: 32px; border: 2.5px solid transparent;"></button>
+                    <button class="color-swatch-btn rounded-circle" type="button" data-accent="#0D9488" title="Teal" style="background-color: #0D9488; width: 32px; height: 32px; border: 2.5px solid transparent;"></button>
+                    <button class="color-swatch-btn rounded-circle" type="button" data-accent="#10B981" title="Emerald" style="background-color: #10B981; width: 32px; height: 32px; border: 2.5px solid transparent;"></button>
+                    <button class="color-swatch-btn rounded-circle" type="button" data-accent="#F43F5E" title="Rose" style="background-color: #F43F5E; width: 32px; height: 32px; border: 2.5px solid transparent;"></button>
+                </div>
+            </div>
+
+            <hr class="my-4 opacity-15">
+
+            <!-- 3. Typography Font -->
+            <div class="mb-4">
+                <h6 class="fw-bold text-dark mb-1 small">Typography</h6>
+                <p class="text-muted extra-small mb-3">Select your preferred interface font</p>
+                <div class="d-grid gap-2" id="fontGrid">
+                    <button class="btn btn-sm btn-light border rounded-3 text-start px-3 py-2 d-flex justify-content-between align-items-center font-btn active" data-font="Plus Jakarta Sans">
+                        <span class="fw-semibold small">Plus Jakarta Sans <span class="text-muted fw-normal">· Default</span></span>
+                        <i class="bi bi-check-circle-fill text-dark font-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-light border rounded-3 text-start px-3 py-2 d-flex justify-content-between align-items-center font-btn" data-font="Inter">
+                        <span class="fw-semibold small">Inter <span class="text-muted fw-normal">· Clean Sans</span></span>
+                        <i class="bi bi-circle text-muted font-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-light border rounded-3 text-start px-3 py-2 d-flex justify-content-between align-items-center font-btn" data-font="Poppins">
+                        <span class="fw-semibold small">Poppins <span class="text-muted fw-normal">· Rounded</span></span>
+                        <i class="bi bi-circle text-muted font-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-light border rounded-3 text-start px-3 py-2 d-flex justify-content-between align-items-center font-btn" data-font="Outfit">
+                        <span class="fw-semibold small">Outfit <span class="text-muted fw-normal">· Geometric</span></span>
+                        <i class="bi bi-circle text-muted font-check"></i>
+                    </button>
+                </div>
+            </div>
+
+            <hr class="my-4 opacity-15">
+
+            <!-- 4. Corner Radius -->
+            <div class="mb-4">
+                <h6 class="fw-bold text-dark mb-1 small">Corner Radius</h6>
+                <p class="text-muted extra-small mb-3">Adjust cards and buttons rounded corners</p>
+                <div class="d-grid gap-2" id="radiusGrid">
+                    <button class="btn btn-sm btn-light border rounded-3 text-start px-3 py-2 d-flex justify-content-between align-items-center radius-btn active" data-radius="rounded">
+                        <span class="fw-semibold small">Rounded <span class="text-muted fw-normal">· Default</span></span>
+                        <i class="bi bi-check-circle-fill text-dark radius-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-light border rounded-3 text-start px-3 py-2 d-flex justify-content-between align-items-center radius-btn" data-radius="sharp">
+                        <span class="fw-semibold small">Sharp <span class="text-muted fw-normal">· 0px</span></span>
+                        <i class="bi bi-circle text-muted radius-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-light border rounded-3 text-start px-3 py-2 d-flex justify-content-between align-items-center radius-btn" data-radius="extra-rounded">
+                        <span class="fw-semibold small">Extra Rounded <span class="text-muted fw-normal">· 16px</span></span>
+                        <i class="bi bi-circle text-muted radius-check"></i>
+                    </button>
+                </div>
+            </div>
+
+            <hr class="my-4 opacity-15">
+
+            <!-- 5. Animations Switch -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0 small">Animations</h6>
+                        <p class="text-muted extra-small mb-0">Enable micro-animations and page effects</p>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" id="animationsToggle" style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4 opacity-15">
+
+            <!-- 6. Reduced Motion Switch -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0 small">Reduced Motion</h6>
+                        <p class="text-muted extra-small mb-0">Minimize active movements</p>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" id="reducedMotionToggle" style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4 opacity-15">
+
+            <!-- Reset Button -->
+            <button type="button" class="btn btn-light border w-100 rounded-pill py-2 small fw-semibold text-muted" id="resetThemeBtn">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset to Defaults
+            </button>
+
+        </div>
+    </div>
+
+    <!-- Command Palette (Ctrl+K) Modal -->
+    <div id="cmdPalette" class="cmd-palette-backdrop">
+        <div class="cmd-palette-card">
+            <div class="d-flex align-items-center border-bottom px-3 py-2">
+                <i class="bi bi-search text-muted fs-5 me-2"></i>
+                <input type="text" id="cmdInput" class="cmd-search-input" placeholder="Type a command or search (e.g. events, budget, venues)...">
+                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 small">ESC</span>
+            </div>
+            <div id="cmdList" class="py-2" style="max-height: 360px; overflow-y: auto;">
+                <div class="px-3 py-1 text-muted small fw-bold text-uppercase">Navigation & Actions</div>
+                <a href="{% url 'dashboard' %}" class="cmd-item"><span><i class="bi bi-speedometer2 me-2 text-dark"></i> Dashboard</span><span class="text-muted small">Jump to main analytics</span></a>
+                <a href="{% url 'category_list' %}" class="cmd-item"><span><i class="bi bi-tags me-2 text-dark"></i> Categories</span><span class="text-muted small">View event categories</span></a>
+                <a href="{% url 'event_list' %}" class="cmd-item"><span><i class="bi bi-calendar-event me-2 text-dark"></i> Events</span><span class="text-muted small">View & schedule events</span></a>
+                <a href="{% url 'member_list' %}" class="cmd-item"><span><i class="bi bi-people me-2 text-dark"></i> Members</span><span class="text-muted small">Participant registries</span></a>
+                <a href="{% url 'venue_list' %}" class="cmd-item"><span><i class="bi bi-geo-alt me-2 text-dark"></i> Venues</span><span class="text-muted small">Manage hall capacities</span></a>
+                <a href="{% url 'resource_list' %}" class="cmd-item"><span><i class="bi bi-box-seam me-2 text-dark"></i> Resources</span><span class="text-muted small">Equipment & logistics</span></a>
+                <a href="{% url 'vendor_list' %}" class="cmd-item"><span><i class="bi bi-shop me-2 text-dark"></i> Vendors</span><span class="text-muted small">Catering & AV suppliers</span></a>
+                <a href="{% url 'contract_list' %}" class="cmd-item"><span><i class="bi bi-file-earmark-text me-2 text-dark"></i> Contracts</span><span class="text-muted small">Signed cost agreements</span></a>
+                <a href="{% url 'budget_list' %}" class="cmd-item"><span><i class="bi bi-wallet2 me-2 text-dark"></i> Budgets</span><span class="text-muted small">Event spend ledgers</span></a>
+                <a href="{% url 'qr_scanner' %}" class="cmd-item"><span><i class="bi bi-qr-code-scan me-2 text-dark"></i> QR Scanner</span><span class="text-muted small">Webcam entry check-in</span></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== HELP MODAL ==================== -->
+    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
+
+                <!-- Modal Header -->
+                <div class="modal-header border-0 px-4 pt-4 pb-3 help-modal-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center justify-content-center rounded-circle help-modal-icon-bg">
+                            <i class="bi bi-question-circle-fill text-white fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-white mb-0" id="helpModalLabel">Help &amp; FAQ</h5>
+                            <p class="text-white mb-0" style="font-size:0.78rem;opacity:0.75;">Find answers to common questions about the EventOS</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="px-4 py-3 border-bottom help-modal-search-bar">
+                    <div class="position-relative">
+                        <i class="bi bi-search position-absolute navbar-search-icon"></i>
+                        <input type="text" id="helpSearchInput" class="form-control rounded-pill" placeholder="Search questions..." style="font-size:0.875rem;padding-left:2.2rem;">
+                    </div>
+                </div>
+
+                <!-- Modal Body: FAQ Accordion -->
+                <div class="modal-body px-4 py-3" id="helpFaqBody">
+
+                    <!-- Section: Getting Started -->
+                    <p class="text-uppercase fw-bold mb-2 help-section-label" style="font-size:0.7rem;letter-spacing:0.08em;">🚀 Getting Started</p>
+                    <div class="accordion accordion-flush mb-4" id="faqGettingStarted">
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" style="font-size:0.875rem;">
+                                    How do I log in to the system?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Navigate to the <strong>Login page</strong> and enter your username and password. If you don't have an account, click <em>Register</em> to create one. After successful login you will be redirected to the Dashboard.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" style="font-size:0.875rem;">
+                                    I forgot my password. How do I reset it?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    On the Login page, click <strong>Forgot Password</strong>. Enter your registered email address and follow the instructions sent to your inbox to reset your password.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" style="font-size:0.875rem;">
+                                    How do I update my profile photo or personal details?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Click your avatar in the top-right corner and select <strong>Profile</strong>. From there you can upload a profile photo, update your name, email, phone number, and bio. Click <em>Save Changes</em> when done.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Section: Events -->
+                    <p class="text-uppercase fw-bold mb-2 help-section-label" style="font-size:0.7rem;letter-spacing:0.08em;">📅 Events</p>
+                    <div class="accordion accordion-flush mb-4" id="faqEvents">
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" style="font-size:0.875rem;">
+                                    How do I create a new event?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Go to <strong>Events → Add Event</strong> from the sidebar. Fill in the event name, category, date, venue, and description, then click <em>Save</em>. The event will appear in the Events list immediately.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" style="font-size:0.875rem;">
+                                    How do I edit or delete an existing event?
+                                </button>
+                            </h2>
+                            <div id="faq5" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Open the event from the <strong>Events</strong> list and click the <em>Edit</em> (pencil) icon. Make your changes and click <em>Save</em>. To delete, click the <em>Delete</em> (trash) icon and confirm the deletion in the popup.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq6" style="font-size:0.875rem;">
+                                    Why can't I see my newly created event on the Dashboard?
+                                </button>
+                            </h2>
+                            <div id="faq6" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    The Dashboard shows <strong>upcoming events</strong> sorted by date. If the event date is in the past, it won't appear in the upcoming section. Check the <em>Events</em> list for a full view of all events.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Section: Members -->
+                    <p class="text-uppercase fw-bold mb-2 help-section-label" style="font-size:0.7rem;letter-spacing:0.08em;">👥 Members</p>
+                    <div class="accordion accordion-flush mb-4" id="faqMembers">
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq7" style="font-size:0.875rem;">
+                                    How do I add a new member/participant?
+                                </button>
+                            </h2>
+                            <div id="faq7" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Go to <strong>Members → Add Member</strong>. Enter the member's name, email, phone, and event association, then save. Members can also be registered directly from an event's detail page.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq8" style="font-size:0.875rem;">
+                                    How do I search for a specific member?
+                                </button>
+                            </h2>
+                            <div id="faq8" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Use the <strong>Search bar</strong> at the top of the Members list page. You can filter by name, email, or event. The global navbar search (top of screen) also finds members instantly.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Section: Venues -->
+                    <p class="text-uppercase fw-bold mb-2 help-section-label" style="font-size:0.7rem;letter-spacing:0.08em;">📍 Venues</p>
+                    <div class="accordion accordion-flush mb-4" id="faqVenues">
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq9" style="font-size:0.875rem;">
+                                    How do I add a venue?
+                                </button>
+                            </h2>
+                            <div id="faq9" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Navigate to <strong>Venues → Add Venue</strong>. Provide the venue name, address, capacity, and any additional notes. Once saved, the venue will be available to select when creating or editing events.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq10" style="font-size:0.875rem;">
+                                    I can't assign a venue to an event. Why?
+                                </button>
+                            </h2>
+                            <div id="faq10" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    You must <strong>create a venue first</strong> before it appears in the event form dropdown. Go to <em>Venues → Add Venue</em>, save it, then return to the event form to select it.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Section: Budget -->
+                    <p class="text-uppercase fw-bold mb-2 help-section-label" style="font-size:0.7rem;letter-spacing:0.08em;">💰 Budget</p>
+                    <div class="accordion accordion-flush mb-4" id="faqBudget">
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq11" style="font-size:0.875rem;">
+                                    How do I track the budget for an event?
+                                </button>
+                            </h2>
+                            <div id="faq11" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Go to <strong>Budgets</strong> from the sidebar. Click <em>Add Budget</em> and link it to an event. You can add individual expense items with categories, amounts, and descriptions. The system automatically calculates totals and shows you overspend alerts.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq12" style="font-size:0.875rem;">
+                                    Why is my budget showing a negative balance?
+                                </button>
+                            </h2>
+                            <div id="faq12" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    A negative balance means your <strong>total expenses exceed the allocated budget</strong>. Review your expense items in the Budget detail page and either increase the allocated amount or reduce expenses.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Section: Vendors & Contracts -->
+                    <p class="text-uppercase fw-bold mb-2 help-section-label" style="font-size:0.7rem;letter-spacing:0.08em;">🏪 Vendors &amp; Contracts</p>
+                    <div class="accordion accordion-flush mb-4" id="faqVendors">
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq13" style="font-size:0.875rem;">
+                                    How do I add a vendor and link them to an event?
+                                </button>
+                            </h2>
+                            <div id="faq13" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Go to <strong>Vendors → Add Vendor</strong>. Fill in the vendor's name, service type, and contact details. Once saved, you can link them to events via <em>Contracts</em> and track service agreements.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq14" style="font-size:0.875rem;">
+                                    How do I create a contract with a vendor?
+                                </button>
+                            </h2>
+                            <div id="faq14" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Go to <strong>Contracts → Add Contract</strong>. Select the vendor, associated event, start/end dates, and agreed cost. You can attach contract documents and set payment status. Contracts are tracked separately from budget items.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Section: Tickets & QR Check-in -->
+                    <p class="text-uppercase fw-bold mb-2 help-section-label" style="font-size:0.7rem;letter-spacing:0.08em;">🎫 Tickets &amp; QR Check-in</p>
+                    <div class="accordion accordion-flush mb-4" id="faqTickets">
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq15" style="font-size:0.875rem;">
+                                    How does the QR code check-in system work?
+                                </button>
+                            </h2>
+                            <div id="faq15" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Each registered member receives a unique QR code ticket. At the event entrance, open <strong>QR Scanner</strong> from the sidebar. Allow camera access and point the webcam at the attendee's QR code. The system will instantly validate and mark them as checked-in.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq16" style="font-size:0.875rem;">
+                                    The camera is not working on the QR Scanner page. What should I do?
+                                </button>
+                            </h2>
+                            <div id="faq16" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Make sure you have <strong>allowed camera permissions</strong> in your browser. The site must be served over <strong>HTTPS</strong> (or localhost) for camera access to work. Check your browser's address bar for a camera icon and click it to grant access.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq17" style="font-size:0.875rem;">
+                                    A QR code scan shows "Invalid Ticket". What does this mean?
+                                </button>
+                            </h2>
+                            <div id="faq17" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    This means the QR code is either <strong>not registered</strong> in the system, belongs to a different event, or has already been used for check-in (duplicate scan). Verify the ticket in the Members list and regenerate if necessary.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Section: Resources -->
+                    <p class="text-uppercase fw-bold mb-2 help-section-label" style="font-size:0.7rem;letter-spacing:0.08em;">📦 Resources</p>
+                    <div class="accordion accordion-flush mb-4" id="faqResources">
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq18" style="font-size:0.875rem;">
+                                    How do I manage equipment and logistics resources?
+                                </button>
+                            </h2>
+                            <div id="faq18" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Navigate to <strong>Resources → Add Resource</strong>. You can log equipment (projectors, microphones, tables, etc.), specify quantity, and assign them to events. The resource list helps you track availability and avoid double-booking.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Section: Chat -->
+                    <p class="text-uppercase fw-bold mb-2 help-section-label" style="font-size:0.7rem;letter-spacing:0.08em;">💬 Chat</p>
+                    <div class="accordion accordion-flush mb-4" id="faqChat">
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq19" style="font-size:0.875rem;">
+                                    How do I message another team member?
+                                </button>
+                            </h2>
+                            <div id="faq19" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Open the <strong>Chat</strong> section from the sidebar. You'll see a list of team members on the left. Click on a member's name to open the conversation and type your message in the input box at the bottom.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq20" style="font-size:0.875rem;">
+                                    My messages are not being sent. What should I check?
+                                </button>
+                            </h2>
+                            <div id="faq20" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Ensure you have a stable <strong>internet connection</strong>. If the issue persists, try refreshing the page. The chat system requires WebSocket support — make sure your browser is up to date (Chrome, Firefox, Edge recommended).
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Section: General / UI -->
+                    <p class="text-uppercase fw-bold mb-2 help-section-label" style="font-size:0.7rem;letter-spacing:0.08em;">⚙️ General &amp; UI</p>
+                    <div class="accordion accordion-flush mb-4" id="faqGeneral">
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq21" style="font-size:0.875rem;">
+                                    How do I switch to Dark Mode?
+                                </button>
+                            </h2>
+                            <div id="faq21" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Click the <strong>Palette icon</strong> (🎨) in the top navbar to open the <em>Personalize</em> drawer. Toggle the <strong>Dark Mode</strong> switch to enable it. Your preference is saved in the browser and persists across sessions.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq22" style="font-size:0.875rem;">
+                                    How do I use the Command Palette (quick search)?
+                                </button>
+                            </h2>
+                            <div id="faq22" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Press <strong>Ctrl + K</strong> (or <strong>Cmd + K</strong> on Mac) anywhere in the app to open the Command Palette. Type the name of any section (e.g. "events", "budget", "venues") to jump there instantly. Press <em>Esc</em> to close.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq23" style="font-size:0.875rem;">
+                                    The page is not loading or showing errors. What should I do?
+                                </button>
+                            </h2>
+                            <div id="faq23" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Try the following steps: <br>
+                                    1. <strong>Refresh the page</strong> (F5 or Ctrl+R). <br>
+                                    2. <strong>Clear your browser cache</strong> (Ctrl+Shift+Delete). <br>
+                                    3. Check your <strong>internet connection</strong>. <br>
+                                    4. Log out and log back in. <br>
+                                    If the issue persists, contact your system administrator.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item help-faq-item border rounded-3 mb-2 overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq24" style="font-size:0.875rem;">
+                                    How do I change the accent color or font of the interface?
+                                </button>
+                            </h2>
+                            <div id="faq24" class="accordion-collapse collapse">
+                                <div class="accordion-body text-muted" style="font-size:0.85rem;">
+                                    Open the <strong>Personalize drawer</strong> by clicking the Palette icon (🎨) in the top navbar. From there, choose an <em>Accent Color</em> swatch and select a <em>Typography</em> font. Changes apply instantly and are saved in your browser.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- No results message -->
+                    <div id="helpNoResults" class="text-center py-5 d-none">
+                        <i class="bi bi-search text-muted" style="font-size:2.5rem;"></i>
+                        <p class="text-muted mt-3">No results found. Try a different keyword.</p>
+                    </div>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer border-0 px-4 py-3 help-modal-footer">
+                    <span class="text-muted me-auto" style="font-size:0.78rem;"><i class="bi bi-envelope me-1"></i> Need more help? Contact your admin.</span>
+                    <button type="button" class="btn btn-sm rounded-pill px-4 btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* ── Help Modal — Theme-Aware Styles ── */
+
+        /* Header: always dark-neutral so it never clashes with accent color */
+        .help-modal-header {
+            background: linear-gradient(135deg, #18181B 0%, #27272A 60%, #3F3F46 100%);
+        }
+        .help-modal-icon-bg {
+            width: 46px; height: 46px;
+            background: rgba(255,255,255,0.12);
+        }
+
+        /* Search bar & footer: use canvas background token */
+        .help-modal-search-bar,
+        .help-modal-footer {
+            background-color: var(--bg-canvas);
+        }
+
+        /* Section category labels: accent with primary color */
+        .help-section-label {
+            color: var(--primary-color);
+        }
+
+        /* Accordion button: uses card-bg + text-main tokens */
+        #helpModal .accordion-button {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            box-shadow: none;
+            padding: 0.85rem 1rem;
+            font-family: var(--font-family);
+        }
+        #helpModal .accordion-button:not(.collapsed) {
+            background-color: var(--bg-canvas);
+            color: var(--primary-color);
+        }
+        #helpModal .accordion-button::after {
+            filter: none;
+        }
+
+        /* Accordion body: card-bg token */
+        #helpModal .accordion-body {
+            background-color: var(--bg-canvas);
+            border-top: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            line-height: 1.7;
+            font-family: var(--font-family);
+        }
+
+        /* FAQ items: border token */
+        #helpModal .help-faq-item {
+            border-color: var(--border-subtle) !important;
+            background-color: var(--card-bg);
+            transition: box-shadow 0.2s ease;
+        }
+        #helpModal .help-faq-item:hover {
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        /* Thin scrollbar */
+        #helpModal .modal-body::-webkit-scrollbar { width: 5px; }
+        #helpModal .modal-body::-webkit-scrollbar-track { background: var(--bg-canvas); }
+        #helpModal .modal-body::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 4px; }
+    </style>
+
+    <script>
+    // Help Modal FAQ Search
+    document.addEventListener('DOMContentLoaded', function() {
+        const helpSearch = document.getElementById('helpSearchInput');
+        if (!helpSearch) return;
+        helpSearch.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            const items = document.querySelectorAll('.help-faq-item');
+            const sections = document.querySelectorAll('#helpFaqBody > p, #helpFaqBody > .accordion');
+            let anyVisible = false;
+
+            if (!query) {
+                items.forEach(item => item.style.display = '');
+                sections.forEach(el => el.style.display = '');
+                document.getElementById('helpNoResults').classList.add('d-none');
+                return;
+            }
+
+            // Hide all section labels first
+            sections.forEach(el => el.style.display = 'none');
+
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                const match = text.includes(query);
+                item.style.display = match ? '' : 'none';
+                if (match) {
+                    anyVisible = true;
+                    // Show parent accordion and its preceding label
+                    const accordion = item.closest('.accordion');
+                    if (accordion) {
+                        accordion.style.display = '';
+                        const label = accordion.previousElementSibling;
+                        if (label && label.tagName === 'P') label.style.display = '';
+                    }
+                    // Auto-expand matching item
+                    const collapseEl = item.querySelector('.accordion-collapse');
+                    if (collapseEl && !collapseEl.classList.contains('show')) {
+                        new bootstrap.Collapse(collapseEl, { toggle: true });
+                    }
+                }
+            });
+
+            document.getElementById('helpNoResults').classList.toggle('d-none', anyVisible);
+        });
+    });
+    </script>
+    <!-- ==================== END HELP MODAL ==================== -->
+
+    <!-- Bootstrap 5 Bundle JS CDN (Includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{% static 'js/main.js' %}?v=1.7"></script>
+
+    <script>
+    // Command Palette Keyboard Listener (Ctrl+K or Cmd+K)
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            const palette = document.getElementById('cmdPalette');
+            palette.classList.toggle('active');
+            if (palette.classList.contains('active')) {
+                document.getElementById('cmdInput').focus();
+            }
+        }
+        if (e.key === 'Escape') {
+            document.getElementById('cmdPalette').classList.remove('active');
+        }
+    });
+
+    // Close command palette on click outside
+    document.getElementById('cmdPalette')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('active');
+        }
+    });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,75 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Contract | EventOS{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'contract_list' %}">Contracts</a></li>
+<li class="breadcrumb-item active" aria-current="page">Create Contract</li>
+{% endblock %}
+
+{% block content %}
+<!-- Page Title -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Create Contract</h3>
+        <p class="text-muted small mb-0">Record a new vendor agreement for an upcoming event.</p>
+    </div>
+    <div>
+        <a href="{% url 'contract_list' %}" class="btn btn-outline-secondary">
+            Cancel
+        </a>
+    </div>
+</div>
+
+<!-- Form Card -->
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4 p-md-5">
+        <form action="{% url 'create_contract' %}" method="POST" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    {{ form.vendor|as_crispy_field }}
+                </div>
+                <div class="col-md-6">
+                    {{ form.event|as_crispy_field }}
+                </div>
+                
+                <div class="col-md-4">
+                    {{ form.contract_amount|as_crispy_field }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.status|as_crispy_field }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.signed_document|as_crispy_field }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.start_date|as_crispy_field }}
+                </div>
+                <div class="col-md-6">
+                    {{ form.end_date|as_crispy_field }}
+                </div>
+                
+                <div class="col-12">
+                    {{ form.terms|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                <button type="reset" class="btn btn-outline-secondary">
+                    Clear Form
+                </button>
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-file-earmark-plus me-2"></i>Save Contract
+                </button>
+            </div>
+            
+        </form>
+    </div>
+</div>
+{% endblock %}

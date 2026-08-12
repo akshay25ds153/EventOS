@@ -1,0 +1,120 @@
+<div class="chat-sidebar">
+    <div class="chat-sidebar-header">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2 text-dark">
+            <i class="bi bi-chat-left-text-fill text-dark"></i>
+            <span>EventOS Messages</span>
+        </h5>
+
+        
+        <!-- Nav Tabs for DM vs Group Chat -->
+        <ul class="nav nav-pills nav-fill chat-tabs gap-1" id="chatTypeTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab != 'event' %}active{% endif %}" 
+                        id="direct-chats-tab" data-bs-toggle="pill" data-bs-target="#direct-chats" 
+                        type="button" role="tab" aria-controls="direct-chats" 
+                        aria-selected="{% if active_tab != 'event' %}true{% else %}false{% endif %}">
+                    Direct
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'event' %}active{% endif %}" 
+                        id="event-chats-tab" data-bs-toggle="pill" data-bs-target="#event-chats" 
+                        type="button" role="tab" aria-controls="event-chats" 
+                        aria-selected="{% if active_tab == 'event' %}true{% else %}false{% endif %}">
+                    Events
+                </button>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="tab-content chat-sidebar-list" id="chatTypeTabContent">
+        <!-- Direct Chats Pane -->
+        <div class="tab-pane fade {% if active_tab != 'event' %}show active{% endif %}" 
+             id="direct-chats" role="tabpanel" aria-labelledby="direct-chats-tab">
+            
+            <!-- Active DM Threads -->
+            {% if active_chats %}
+                <div class="mb-3">
+                    <span class="text-uppercase text-muted fw-bold small px-2 d-block mb-2">Active Conversations</span>
+                    {% for chat_user in active_chats %}
+                        <a href="{% url 'direct_chat' chat_user.id %}" 
+                           class="chat-list-item {% if active_chat_user_id == chat_user.id %}active{% endif %}">
+                            <!-- Profile photo or initial -->
+                            {% if chat_user.profile.profile_photo %}
+                                <img src="{{ chat_user.profile.profile_photo.url }}"
+                                     class="chat-item-avatar"
+                                     style="object-fit:cover;padding:0;"
+                                     alt="{{ chat_user.username }}">
+                            {% else %}
+                                <div class="chat-item-avatar">
+                                    {{ chat_user.username|slice:":1"|upper }}
+                                </div>
+                            {% endif %}
+                            <div class="chat-item-info">
+                                <div class="chat-item-name">{{ chat_user.username }}</div>
+                                <div class="chat-item-meta">
+                                    {% if chat_user.email %}{{ chat_user.email }}{% else %}No email{% endif %}
+                                </div>
+                            </div>
+                            <!-- Unread messages badge -->
+                            {% for u_id, count in unread_counts.items %}
+                                {% if u_id == chat_user.id and count > 0 %}
+                                    <span class="badge bg-danger rounded-pill">{{ count }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <!-- All Registered Users -->
+            <div>
+                <span class="text-uppercase text-muted fw-bold small px-2 d-block mb-2">All System Users</span>
+                {% for u in all_users %}
+                    <!-- Avoid repeating if already in active_chats -->
+                    {% if u not in active_chats %}
+                        <a href="{% url 'direct_chat' u.id %}" 
+                           class="chat-list-item {% if active_chat_user_id == u.id %}active{% endif %}">
+                            {% if u.profile.profile_photo %}
+                                <img src="{{ u.profile.profile_photo.url }}"
+                                     class="chat-item-avatar"
+                                     style="object-fit:cover;padding:0;"
+                                     alt="{{ u.username }}">
+                            {% else %}
+                                <div class="chat-item-avatar" style="background:#64748b;">
+                                    {{ u.username|slice:":1"|upper }}
+                                </div>
+                            {% endif %}
+                            <div class="chat-item-info">
+                                <div class="chat-item-name">{{ u.username }}</div>
+                                <div class="chat-item-meta">Start conversation</div>
+                            </div>
+                        </a>
+                    {% endif %}
+                {% empty %}
+                    <div class="text-center text-muted small py-3">No other users found</div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Event Chats Pane -->
+        <div class="tab-pane fade {% if active_tab == 'event' %}show active{% endif %}" 
+             id="event-chats" role="tabpanel" aria-labelledby="event-chats-tab">
+            <span class="text-uppercase text-muted fw-bold small px-2 d-block mb-2">Event Channels</span>
+            {% for ev in all_events %}
+                <a href="{% url 'event_chat' ev.id %}" 
+                   class="chat-list-item {% if active_event_id == ev.id %}active{% endif %}">
+                    <div class="chat-item-avatar event-avatar">
+                        <i class="bi bi-calendar-event"></i>
+                    </div>
+                    <div class="chat-item-info">
+                        <div class="chat-item-name">{{ ev.name }}</div>
+                        <div class="chat-item-meta">{{ ev.category.name }}</div>
+                    </div>
+                </a>
+            {% empty %}
+                <div class="text-center text-muted small py-3">No events available</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

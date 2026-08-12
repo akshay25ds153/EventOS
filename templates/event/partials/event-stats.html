@@ -1,0 +1,53 @@
+<div class="row g-3 mb-4">
+    <!-- Utilization Metric -->
+    <div class="col-md-4">
+        <div class="card border-0 rounded-4 shadow-sm bg-white p-4 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="text-muted fw-bold extra-small text-uppercase">Capacity Utilization</div>
+                <div class="badge bg-light text-dark border rounded-pill px-2.5 py-1 extra-small fw-bold">
+                    {{ capacity_utilization }}%
+                </div>
+            </div>
+            <h3 class="fw-extrabold text-dark mb-2">
+                {{ registered_count }} <span class="fs-6 text-muted fw-normal">/ {{ event.max_participants }} filled</span>
+            </h3>
+            <div class="progress rounded-pill" style="height: 8px;">
+                <div class="progress-bar bg-primary bg-gradient rounded-pill" role="progressbar" 
+                     style="width: {{ capacity_utilization }}%" 
+                     aria-valuenow="{{ capacity_utilization }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remaining Seats Metric -->
+    <div class="col-md-4">
+        <div class="card border-0 rounded-4 shadow-sm bg-white p-4 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="text-muted fw-bold extra-small text-uppercase">Remaining Seats</div>
+                <div class="rounded-3 bg-light border d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <i class="bi bi-person-fill-dash text-dark fs-6"></i>
+                </div>
+            </div>
+            <h3 class="fw-extrabold text-dark mb-1">
+                {{ remaining_seats }}
+            </h3>
+            <p class="text-muted extra-small mb-0">Seats still open for registration</p>
+        </div>
+    </div>
+
+    <!-- Duration Metric -->
+    <div class="col-md-4">
+        <div class="card border-0 rounded-4 shadow-sm bg-white p-4 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="text-muted fw-bold extra-small text-uppercase">Event Duration</div>
+                <div class="rounded-3 bg-light border d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <i class="bi bi-hourglass-split text-dark fs-6"></i>
+                </div>
+            </div>
+            <h3 class="fw-extrabold text-dark mb-1">
+                {{ duration_days }} <span class="fs-5 text-muted fw-normal">days</span>
+            </h3>
+            <p class="text-muted extra-small mb-0">From start to end schedule</p>
+        </div>
+    </div>
+</div>
