@@ -11,7 +11,7 @@
 *   **Technology Stack:** Python, Django Web Framework, SQLite, Bootstrap 5, HTML5, CSS3, ReportLab, Celery, Redis
 *   **Organization:** Infosys Springboard Virtual Internship
 *   **Prepared By:** 
-    *   **Student Name:** AADHIL
+    *   **Student Name:** Akshay
     *   **Internship ID:** INF-SB-2026-89427
     *   **Department:** Computer Science & Engineering
 *   **Date of Submission:** August 5, 2026
@@ -24,7 +24,7 @@
 ### INFOSYS SPRINGBOARD VIRTUAL INTERNSHIP
 #### DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING
 
-This is to certify that the project report entitled **"College Event Management System"** is a bona fide record of the work carried out by **Aadhil** in partial fulfillment of the requirements for the **Infosys Springboard Virtual Internship** during the period of June 2026 to July 2026. 
+This is to certify that the project report entitled **"College Event Management System"** is a bona fide record of the work carried out by **Akshay** in partial fulfillment of the requirements for the **Infosys Springboard Virtual Internship** during the period of June 2026 to July 2026. 
 
 The project has been reviewed and found to satisfy the academic and technical standards required for the completion of the virtual internship.
 
