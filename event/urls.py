@@ -140,4 +140,6 @@ urlpatterns = [
     # Profile Preferences API
     path('api/profile/preferences/', views.update_preferences_api, name='update_preferences_api'),
     path('', include(router.urls)),
+    # cHAT BOT
+    path('ai-chat/', views.ai_chat, name='ai_chat'),
 ]

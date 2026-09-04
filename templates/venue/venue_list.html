@@ -1,265 +1,416 @@
-{% extends 'base/base.html' %}
-
-{% block title %}Venues | EventSphere{% endblock %}
-
-{% block breadcrumbs %}
+{% extends 'base/base.html' %} {% block title %} Venues | EventSphere {%
+endblock %} {% block breadcrumbs %}
 <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
 <li class="breadcrumb-item active" aria-current="page">Venues</li>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <!-- Page Header -->
 <div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <h3 class="fw-extrabold text-dark mb-1">Venues & Locations</h3>
-        <p class="text-muted small mb-0">Manage auditoriums, halls, classrooms, and event capacity allocations.</p>
+  <div>
+    <h3 class="fw-extrabold text-dark mb-1">Venues & Locations</h3>
+    <p class="text-muted small mb-0">
+      Manage auditoriums, halls, classrooms, and event capacity allocations.
+    </p>
+  </div>
+  <div class="d-flex align-items-center gap-3">
+    <!-- View Switcher -->
+    <div
+      class="btn-group rounded-pill p-1 bg-light border"
+      role="group"
+      aria-label="View Switcher"
+    >
+      <button
+        type="button"
+        class="btn btn-sm rounded-pill px-3 py-1 fw-bold extra-small active"
+        id="btnGridView"
+        onclick="switchView('grid')"
+      >
+        <i class="bi bi-grid-3x3-gap-fill me-1"></i> Grid
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm rounded-pill px-3 py-1 fw-bold extra-small text-muted"
+        id="btnTableView"
+        onclick="switchView('table')"
+      >
+        <i class="bi bi-list-ul me-1"></i> Table
+      </button>
     </div>
-    <div class="d-flex align-items-center gap-3">
-        <!-- View Switcher -->
-        <div class="btn-group rounded-pill p-1 bg-light border" role="group" aria-label="View Switcher">
-            <button type="button" class="btn btn-sm rounded-pill px-3 py-1 fw-bold extra-small active" id="btnGridView" onclick="switchView('grid')">
-                <i class="bi bi-grid-3x3-gap-fill me-1"></i> Grid
-            </button>
-            <button type="button" class="btn btn-sm rounded-pill px-3 py-1 fw-bold extra-small text-muted" id="btnTableView" onclick="switchView('table')">
-                <i class="bi bi-list-ul me-1"></i> Table
-            </button>
-        </div>
-        {% if request.user.is_staff or request.user.profile.role == 'admin' or request.user.profile.role == 'organizer' %}
-        <div class="dropdown">
-            <button class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold small shadow-sm dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-download me-1"></i> Export
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="exportDropdown">
-                <li><button class="dropdown-item py-2 small" onclick="exportData('csv', this)"><i class="bi bi-filetype-csv me-2 text-success"></i> Excel/CSV</button></li>
-                <li><button class="dropdown-item py-2 small" onclick="exportData('pdf', this)"><i class="bi bi-file-pdf me-2 text-danger"></i> PDF Document</button></li>
-            </ul>
-        </div>
-        {% endif %}
-        {% if request.user.is_staff %}
-        <a href="{% url 'create_venue' %}" class="btn btn-dark rounded-pill px-4 py-2 fw-bold small shadow-sm">
-            <i class="bi bi-geo-alt me-1"></i> Create Venue
-        </a>
-        {% endif %}
+    {% if can_export_options %}
+    <div class="dropdown">
+      <button
+        class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold small shadow-sm dropdown-toggle"
+        type="button"
+        id="exportDropdown"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+      >
+        <i class="bi bi-download me-1"></i> Export
+      </button>
+      <ul
+        class="dropdown-menu dropdown-menu-end shadow border-0 mt-2"
+        aria-labelledby="exportDropdown"
+      >
+        <li>
+          <button
+            class="dropdown-item py-2 small"
+            onclick="exportData('csv', this)"
+          >
+            <i class="bi bi-filetype-csv me-2 text-success"></i> Excel/CSV
+          </button>
+        </li>
+        <li>
+          <button
+            class="dropdown-item py-2 small"
+            onclick="exportData('pdf', this)"
+          >
+            <i class="bi bi-file-pdf me-2 text-danger"></i> PDF Document
+          </button>
+        </li>
+      </ul>
     </div>
+    {% endif %} {% if request.user.is_authenticated %}
+    <a
+      href="{% url 'create_venue' %}"
+      class="btn btn-dark rounded-pill px-4 py-2 fw-bold small shadow-sm"
+    >
+      <i class="bi bi-geo-alt me-1"></i> Create Venue
+    </a>
+    {% endif %}
+  </div>
 </div>
 
 <!-- Venue Grid View -->
 <div id="venuesGridView" class="row g-4 mb-4">
-    {% for venue in venues %}
-        <div class="col-md-6 col-lg-4">
-            <div class="card border-0 rounded-4 shadow-sm bg-white h-100 d-flex flex-column justify-content-between overflow-hidden">
-                <div>
-                    <!-- Venue Image Header -->
-                    <div class="position-relative" style="height: 160px; background: #e5e7eb;">
-                        {% if venue.image %}
-                            <img src="{{ venue.image.url }}" class="w-100 h-100 object-fit-cover" alt="{{ venue.name }}">
-                        {% else %}
-                            <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted">
-                                <i class="bi bi-building fs-1" style="opacity: 0.3;"></i>
-                            </div>
-                        {% endif %}
-                        <div class="position-absolute top-0 end-0 p-3 d-flex flex-column gap-2">
-                            <!-- Status Badge -->
-                            {% if venue.status == 'Active' %}
-                                <span class="badge bg-success rounded-pill px-3 py-1 text-white border-0 small shadow-sm">Active</span>
-                            {% elif venue.status == 'Maintenance' %}
-                                <span class="badge bg-warning rounded-pill px-3 py-1 text-dark border-0 small shadow-sm">Maintenance</span>
-                            {% else %}
-                                <span class="badge bg-secondary rounded-pill px-3 py-1 text-white border-0 small shadow-sm">Inactive</span>
-                            {% endif %}
+  {% for venue in venues %}
+  <div class="col-md-6 col-lg-4">
+    <div
+      class="card border-0 rounded-4 shadow-sm bg-white h-100 d-flex flex-column justify-content-between overflow-hidden"
+    >
+      <div>
+        <!-- Venue Image Header -->
+        <div
+          class="position-relative"
+          style="height: 160px; background: #e5e7eb"
+        >
+          {% if venue.image %}
+          <img
+            src="{{ venue.image.url }}"
+            class="w-100 h-100 object-fit-cover"
+            alt="{{ venue.name }}"
+          />
+          {% else %}
+          <div
+            class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted"
+          >
+            <i class="bi bi-building fs-1" style="opacity: 0.3"></i>
+          </div>
+          {% endif %}
+          <div
+            class="position-absolute top-0 end-0 p-3 d-flex flex-column gap-2"
+          >
+            <!-- Status Badge -->
+            {% if venue.status == 'Active' %}
+            <span
+              class="badge bg-success rounded-pill px-3 py-1 text-white border-0 small shadow-sm"
+              >Active</span
+            >
+            {% elif venue.status == 'Maintenance' %}
+            <span
+              class="badge bg-warning rounded-pill px-3 py-1 text-dark border-0 small shadow-sm"
+              >Maintenance</span
+            >
+            {% else %}
+            <span
+              class="badge bg-secondary rounded-pill px-3 py-1 text-white border-0 small shadow-sm"
+              >Inactive</span
+            >
+            {% endif %}
 
-                            <!-- Bookable Badge -->
-                            {% if venue.is_bookable %}
-                                <span class="badge bg-primary rounded-pill px-3 py-1 text-white border-0 small shadow-sm"><i class="bi bi-calendar-check me-1"></i>Bookable</span>
-                            {% else %}
-                                <span class="badge bg-danger rounded-pill px-3 py-1 text-white border-0 small shadow-sm"><i class="bi bi-calendar-x me-1"></i>Closed</span>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="p-4">
-                        <!-- Location Badge & Circle Arrow -->
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <span class="badge bg-light text-dark border rounded-pill px-3 py-1 extra-small fw-semibold">
-                                <i class="bi bi-geo-alt me-1 text-primary"></i> {{ venue.location }}
-                            </span>
-                            <a href="{% url 'venue_details' venue.id %}" class="btn-circle-arrow" title="View Venue Details" style="text-decoration: none;">
-                                <i class="bi bi-arrow-up-right"></i>
-                            </a>
-                        </div>
-                        
-                        <h5 class="fw-extrabold text-dark mb-1">
-                            <a href="{% url 'venue_details' venue.id %}" class="text-dark text-decoration-none">{{ venue.name }}</a>
-                        </h5>
-                        <p class="text-muted extra-small mb-2">
-                            <i class="bi bi-clock me-1"></i>Hours: 
-                            {% if venue.available_from and venue.available_to %}
-                                {{ venue.available_from|time:"g:i A" }} - {{ venue.available_to|time:"g:i A" }}
-                            {% else %}
-                                All Day
-                            {% endif %}
-                        </p>
-
-                        {% if venue.description %}
-                            <p class="text-muted extra-small mb-3 text-truncate-2">{{ venue.description }}</p>
-                        {% endif %}
-
-                        <!-- Metrics Container -->
-                        <div class="row g-2 mb-3 p-3 rounded-4" style="background-color: var(--bg-canvas); border: 1px solid var(--border-subtle);">
-                            <div class="col-6">
-                                <span class="text-muted extra-small d-block fw-bold text-uppercase">Capacity</span>
-                                <h5 class="fw-extrabold text-dark mb-0">{{ venue.capacity }} <span class="fs-6 text-muted fw-normal">seats</span></h5>
-                            </div>
-                            <div class="col-6 text-end">
-                                <span class="text-muted extra-small d-block fw-bold text-uppercase">Amenities</span>
-                                <span class="text-dark extra-small fw-bold d-block text-truncate mt-1" title="{{ venue.amenities }}">
-                                    {{ venue.amenities|default:"Standard" }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Footer Actions -->
-                <div class="d-flex align-items-center justify-content-between p-4 border-top">
-                    <a href="{% url 'venue_details' venue.id %}" class="btn btn-sm btn-dark rounded-pill px-3 py-1.5 fw-bold extra-small">
-                        <i class="bi bi-eye me-1"></i> Details
-                    </a>
-                    {% if request.user.is_staff %}
-                    <div class="d-flex align-items-center gap-2">
-                        <a href="{% url 'edit_venue' venue.id %}" class="btn btn-sm btn-light border rounded-circle text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Edit Venue">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <a href="{% url 'delete_venue' venue.id %}" class="btn btn-sm btn-light border rounded-circle text-danger d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Delete Venue">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+            <!-- Bookable Badge -->
+            {% if venue.is_bookable %}
+            <span
+              class="badge bg-primary rounded-pill px-3 py-1 text-white border-0 small shadow-sm"
+              ><i class="bi bi-calendar-check me-1"></i>Bookable</span
+            >
+            {% else %}
+            <span
+              class="badge bg-danger rounded-pill px-3 py-1 text-white border-0 small shadow-sm"
+              ><i class="bi bi-calendar-x me-1"></i>Closed</span
+            >
+            {% endif %}
+          </div>
         </div>
-    {% empty %}
-        <div class="col-12">
-            <div class="card text-center py-5 border-0 rounded-4 shadow-sm bg-white">
-                <i class="bi bi-geo fs-1 text-muted d-block mb-2"></i>
-                <h6 class="fw-bold text-dark">No Venues Registered</h6>
-                <p class="text-muted extra-small mb-3">Event locations and campus venues haven't been added yet.</p>
-                {% if request.user.is_staff %}
-                <a href="{% url 'create_venue' %}" class="btn btn-dark rounded-pill px-4 btn-sm fw-bold">Create First Venue</a>
-                {% endif %}
+
+        <div class="p-4">
+          <!-- Location Badge & Circle Arrow -->
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span
+              class="badge bg-light text-dark border rounded-pill px-3 py-1 extra-small fw-semibold"
+            >
+              <i class="bi bi-geo-alt me-1 text-primary"></i> {{ venue.location
+              }}
+            </span>
+            <a
+              href="{% url 'venue_details' venue.id %}"
+              class="btn-circle-arrow"
+              title="View Venue Details"
+              style="text-decoration: none"
+            >
+              <i class="bi bi-arrow-up-right"></i>
+            </a>
+          </div>
+
+          <h5 class="fw-extrabold text-dark mb-1">
+            <a
+              href="{% url 'venue_details' venue.id %}"
+              class="text-dark text-decoration-none"
+              >{{ venue.name }}</a
+            >
+          </h5>
+          <p class="text-muted extra-small mb-2">
+            <i class="bi bi-clock me-1"></i>Hours: {{ venue.hours_display }}
+          </p>
+
+          {% if venue.description %}
+          <p class="text-muted extra-small mb-3 text-truncate-2">
+            {{ venue.description }}
+          </p>
+          {% endif %}
+
+          <!-- Metrics Container -->
+          <div
+            class="row g-2 mb-3 p-3 rounded-4"
+            style="
+              background-color: var(--bg-canvas);
+              border: 1px solid var(--border-subtle);
+            "
+          >
+            <div class="col-6">
+              <span
+                class="text-muted extra-small d-block fw-bold text-uppercase"
+                >Capacity</span
+              >
+              <h5 class="fw-extrabold text-dark mb-0">
+                {{ venue.capacity }}
+                <span class="fs-6 text-muted fw-normal">seats</span>
+              </h5>
             </div>
+            <div class="col-6 text-end">
+              <span
+                class="text-muted extra-small d-block fw-bold text-uppercase"
+                >Amenities</span
+              >
+              <span
+                class="text-dark extra-small fw-bold d-block text-truncate mt-1"
+                title="{{ venue.amenities }}"
+              >
+                {{ venue.amenities|default:"Standard" }}
+              </span>
+            </div>
+          </div>
         </div>
-    {% endfor %}
+      </div>
+
+      <!-- Footer Actions -->
+      <div
+        class="d-flex align-items-center justify-content-between p-4 border-top"
+      >
+        <a
+          href="{% url 'venue_details' venue.id %}"
+          class="btn btn-sm btn-dark rounded-pill px-3 py-1.5 fw-bold extra-small"
+        >
+          <i class="bi bi-eye me-1"></i> Details
+        </a>
+        {% if request.user.is_staff %}
+        <div class="d-flex align-items-center gap-2">
+          <a
+            href="{% url 'edit_venue' venue.id %}"
+            class="btn btn-sm btn-light border rounded-circle text-primary d-flex align-items-center justify-content-center"
+            style="width: 32px; height: 32px"
+            title="Edit Venue"
+          >
+            <i class="bi bi-pencil"></i>
+          </a>
+          <a
+            href="{% url 'delete_venue' venue.id %}"
+            class="btn btn-sm btn-light border rounded-circle text-danger d-flex align-items-center justify-content-center"
+            style="width: 32px; height: 32px"
+            title="Delete Venue"
+          >
+            <i class="bi bi-trash"></i>
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12">
+    <div class="card text-center py-5 border-0 rounded-4 shadow-sm bg-white">
+      <i class="bi bi-geo fs-1 text-muted d-block mb-2"></i>
+      <h6 class="fw-bold text-dark">No Venues Registered</h6>
+      <p class="text-muted extra-small mb-3">
+        Event locations and campus venues haven't been added yet.
+      </p>
+      {% if request.user.is_authenticated %}
+      <a
+        href="{% url 'create_venue' %}"
+        class="btn btn-dark rounded-pill px-4 btn-sm fw-bold"
+        >Create First Venue</a
+      >
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
 </div>
 
 <!-- Venue Table View -->
-<div id="venuesTableView" class="card border-0 rounded-4 shadow-sm bg-white d-none mb-4 overflow-hidden">
-    <div class="table-responsive">
-        <table class="table align-middle border-0 mb-0">
-            <thead style="background: var(--bg-canvas);">
-                <tr class="text-muted extra-small text-uppercase border-bottom">
-                    <th class="border-0 px-4 py-3">Venue Name</th>
-                    <th class="border-0 py-3">Capacity</th>
-                    <th class="border-0 py-3">Location</th>
-                    <th class="border-0 py-3">Status</th>
-                    <th class="border-0 py-3">Bookable</th>
-                    <th class="border-0 py-3">Hours</th>
-                    {% if request.user.is_staff %}
-                    <th class="border-0 py-3 text-end px-4">Actions</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for venue in venues %}
-                    <tr class="border-bottom">
-                        <td class="px-4 py-3 fw-bold text-dark">
-                            <a href="{% url 'venue_details' venue.id %}" class="text-dark text-decoration-none">{{ venue.name }}</a>
-                        </td>
-                        <td class="py-3">
-                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 extra-small fw-bold">
-                                {{ venue.capacity }} seats
-                            </span>
-                        </td>
-                        <td class="py-3 text-muted extra-small"><i class="bi bi-geo-alt me-1 text-primary"></i>{{ venue.location }}</td>
-                        <td class="py-3">
-                            {% if venue.status == 'Active' %}
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-0.5 extra-small">Active</span>
-                            {% elif venue.status == 'Maintenance' %}
-                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2.5 py-0.5 extra-small">Maintenance</span>
-                            {% else %}
-                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2.5 py-0.5 extra-small">Inactive</span>
-                            {% endif %}
-                        </td>
-                        <td class="py-3">
-                            {% if venue.is_bookable %}
-                                <span class="text-success extra-small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Yes</span>
-                            {% else %}
-                                <span class="text-danger extra-small fw-bold"><i class="bi bi-x-circle-fill me-1"></i>No</span>
-                            {% endif %}
-                        </td>
-                        <td class="py-3 text-muted extra-small">
-                            {% if venue.available_from and venue.available_to %}
-                                {{ venue.available_from|time:"g:i A" }} - {{ venue.available_to|time:"g:i A" }}
-                            {% else %}
-                                All Day
-                            {% endif %}
-                        </td>
-                        {% if request.user.is_staff %}
-                        <td class="py-3 text-end px-4">
-                            <div class="d-flex align-items-center justify-content-end gap-1">
-                                <a href="{% url 'venue_details' venue.id %}" class="btn btn-sm btn-light border rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="View Details">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <a href="{% url 'edit_venue' venue.id %}" class="btn btn-sm btn-light border rounded-circle text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Edit">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="{% url 'delete_venue' venue.id %}" class="btn btn-sm btn-light border rounded-circle text-danger d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Delete">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </div>
-                        </td>
-                        {% endif %}
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center py-5 text-muted small">No venues registered in the database.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<div
+  id="venuesTableView"
+  class="card border-0 rounded-4 shadow-sm bg-white d-none mb-4 overflow-hidden"
+>
+  <div class="table-responsive">
+    <table class="table align-middle border-0 mb-0">
+      <thead style="background: var(--bg-canvas)">
+        <tr class="text-muted extra-small text-uppercase border-bottom">
+          <th class="border-0 px-4 py-3">Venue Name</th>
+          <th class="border-0 py-3">Capacity</th>
+          <th class="border-0 py-3">Location</th>
+          <th class="border-0 py-3">Status</th>
+          <th class="border-0 py-3">Bookable</th>
+          <th class="border-0 py-3">Hours</th>
+          {% if request.user.is_staff %}
+          <th class="border-0 py-3 text-end px-4">Actions</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for venue in venues %}
+        <tr class="border-bottom">
+          <td class="px-4 py-3 fw-bold text-dark">
+            <a
+              href="{% url 'venue_details' venue.id %}"
+              class="text-dark text-decoration-none"
+              >{{ venue.name }}</a
+            >
+          </td>
+          <td class="py-3">
+            <span
+              class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 extra-small fw-bold"
+            >
+              {{ venue.capacity }} seats
+            </span>
+          </td>
+          <td class="py-3 text-muted extra-small">
+            <i class="bi bi-geo-alt me-1 text-primary"></i>{{ venue.location }}
+          </td>
+          <td class="py-3">
+            {% if venue.status == 'Active' %}
+            <span
+              class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-0.5 extra-small"
+              >Active</span
+            >
+            {% elif venue.status == 'Maintenance' %}
+            <span
+              class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2.5 py-0.5 extra-small"
+              >Maintenance</span
+            >
+            {% else %}
+            <span
+              class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2.5 py-0.5 extra-small"
+              >Inactive</span
+            >
+            {% endif %}
+          </td>
+          <td class="py-3">
+            {% if venue.is_bookable %}
+            <span class="text-success extra-small fw-bold"
+              ><i class="bi bi-check-circle-fill me-1"></i>Yes</span
+            >
+            {% else %}
+            <span class="text-danger extra-small fw-bold"
+              ><i class="bi bi-x-circle-fill me-1"></i>No</span
+            >
+            {% endif %}
+          </td>
+          <td class="py-3 text-muted extra-small">
+            {% if venue.available_from and venue.available_to %} {{
+            venue.available_from|time:"g:i A" }} - {{
+            venue.available_to|time:"g:i A" }} {% else %} All Day {% endif %}
+          </td>
+          {% if request.user.is_staff %}
+          <td class="py-3 text-end px-4">
+            <div class="d-flex align-items-center justify-content-end gap-1">
+              <a
+                href="{% url 'venue_details' venue.id %}"
+                class="btn btn-sm btn-light border rounded-circle d-flex align-items-center justify-content-center"
+                style="width: 32px; height: 32px"
+                title="View Details"
+              >
+                <i class="bi bi-eye"></i>
+              </a>
+              <a
+                href="{% url 'edit_venue' venue.id %}"
+                class="btn btn-sm btn-light border rounded-circle text-primary d-flex align-items-center justify-content-center"
+                style="width: 32px; height: 32px"
+                title="Edit"
+              >
+                <i class="bi bi-pencil"></i>
+              </a>
+              <a
+                href="{% url 'delete_venue' venue.id %}"
+                class="btn btn-sm btn-light border rounded-circle text-danger d-flex align-items-center justify-content-center"
+                style="width: 32px; height: 32px"
+                title="Delete"
+              >
+                <i class="bi bi-trash"></i>
+              </a>
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center py-5 text-muted small">
+            No venues registered in the database.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <script>
-    function switchView(view) {
-        const grid = document.getElementById('venuesGridView');
-        const table = document.getElementById('venuesTableView');
-        const btnGrid = document.getElementById('btnGridView');
-        const btnTable = document.getElementById('btnTableView');
-        
-        if (view === 'grid') {
-            grid.classList.remove('d-none');
-            table.classList.add('d-none');
-            btnGrid.classList.add('active');
-            btnGrid.classList.remove('text-muted');
-            btnTable.classList.remove('active');
-            btnTable.classList.add('text-muted');
-            localStorage.setItem('ems-venue-view', 'grid');
-        } else {
-            grid.classList.add('d-none');
-            table.classList.remove('d-none');
-            btnGrid.classList.remove('active');
-            btnGrid.classList.add('text-muted');
-            btnTable.classList.add('active');
-            btnTable.classList.remove('text-muted');
-            localStorage.setItem('ems-venue-view', 'table');
-        }
+  function switchView(view) {
+    const grid = document.getElementById("venuesGridView");
+    const table = document.getElementById("venuesTableView");
+    const btnGrid = document.getElementById("btnGridView");
+    const btnTable = document.getElementById("btnTableView");
+
+    if (view === "grid") {
+      grid.classList.remove("d-none");
+      table.classList.add("d-none");
+      btnGrid.classList.add("active");
+      btnGrid.classList.remove("text-muted");
+      btnTable.classList.remove("active");
+      btnTable.classList.add("text-muted");
+      localStorage.setItem("ems-venue-view", "grid");
+    } else {
+      grid.classList.add("d-none");
+      table.classList.remove("d-none");
+      btnGrid.classList.remove("active");
+      btnGrid.classList.add("text-muted");
+      btnTable.classList.add("active");
+      btnTable.classList.remove("text-muted");
+      localStorage.setItem("ems-venue-view", "table");
     }
-    
-    // Restore layout preference on load
-    document.addEventListener('DOMContentLoaded', () => {
-        const pref = localStorage.getItem('ems-venue-view') || 'grid';
-        switchView(pref);
-    });
+  }
+
+  // Restore layout preference on load
+  document.addEventListener("DOMContentLoaded", () => {
+    const pref = localStorage.getItem("ems-venue-view") || "grid";
+    switchView(pref);
+  });
 </script>
 {% endblock %}

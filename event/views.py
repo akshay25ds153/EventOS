@@ -1,3 +1,7 @@
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from openai import OpenAI, AuthenticationError, RateLimitError
+import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
@@ -7,6 +11,7 @@ from django.db.models import Q, Count
 from django.db import transaction
 from datetime import date
 from django.core.exceptions import PermissionDenied
+from django.conf import settings
 
 from .models import Category, Event, Member, Contact, Message, Venue, Sponsor, Resource, ResourceAllocation, Vendor, Contract, Ticket, Budget, Expense, Attendance, Announcement
 from .forms import CategoryForm, EventForm, MemberForm, ContactForm, UserSignupForm, SelfRegistrationForm, VenueForm, SponsorForm, ResourceForm, ResourceAllocationForm, VendorForm, ContractForm, BudgetForm, ExpenseForm, AnnouncementForm
@@ -135,6 +140,7 @@ def register_view(request):
 
 @login_required
 def dashboard_view(request):
+    user_role = getattr(getattr(request.user, 'profile', None), 'role', 'viewer')
     total_categories = Category.objects.count()
     total_events = Event.objects.count()
     total_members = Member.objects.count()
@@ -175,6 +181,9 @@ def dashboard_view(request):
         'chart_data': chart_data,
         'event_status_labels': event_status_labels,
         'event_status_data': event_status_data,
+        'can_manage_events': request.user.is_authenticated,
+        'can_manage_announcements': request.user.is_staff or user_role in ['admin', 'organizer'],
+        'can_access_qr_scanner': request.user.is_staff or user_role in ['admin', 'organizer'] or Event.objects.filter(organizers=request.user).exists(),
     }
     return render(request, 'dashboard/dashboard.html', context)
 
@@ -281,12 +290,13 @@ def category_list(request):
             response['Content-Disposition'] = f'attachment; filename="{filename_base}.pdf"'
             return response
             
-    return render(request, 'category/category-list.html', {'categories': categories})
+    return render(request, 'category/category-list.html', {
+        'categories': categories,
+        'can_export_options': request.user.is_staff or getattr(getattr(request.user, 'profile', None), 'role', '') in ['admin', 'organizer'],
+    })
 
 @login_required
 def create_category(request):
-    if not request.user.is_staff:
-        raise PermissionDenied("Only staff members can create categories.")
     if request.method == 'POST':
         form = CategoryForm(request.POST, request.FILES)
         if form.is_valid():
@@ -576,15 +586,14 @@ def event_list(request):
             response['Content-Disposition'] = f'attachment; filename="{filename_base}.pdf"'
             return response
         
-    return render(request, 'event/event-list.html', {'events': filtered_events})
+    return render(request, 'event/event-list.html', {
+        'events': filtered_events,
+        'can_manage_events': request.user.is_authenticated,
+        'can_export_events': request.user.is_staff or getattr(getattr(request.user, 'profile', None), 'role', '') in ['admin', 'organizer'],
+    })
 
 @login_required
 def create_event(request):
-    # Allow staff, admins, or organizers to create
-    user_role = getattr(request.user, 'profile', None).role if getattr(request.user, 'profile', None) else 'viewer'
-    if not request.user.is_staff and user_role not in ['admin', 'organizer']:
-        raise PermissionDenied("You do not have permission to create events.")
-        
     if request.method == 'POST':
         form = EventForm(request.POST, request.FILES)
         if form.is_valid():
@@ -1336,8 +1345,17 @@ def venue_list(request):
             response = HttpResponse(pdf_buffer.read(), content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="{filename_base}.pdf"'
             return response
+
+    for venue in venues:
+        if venue.available_from and venue.available_to:
+            venue.hours_display = f'{venue.available_from.strftime("%I:%M %p")} - {venue.available_to.strftime("%I:%M %p")}'
+        else:
+            venue.hours_display = 'All Day'
             
-    return render(request, 'venue/venue_list.html', {'venues': venues})
+    return render(request, 'venue/venue_list.html', {
+        'venues': venues,
+        'can_export_options': request.user.is_staff or getattr(getattr(request.user, 'profile', None), 'role', '') in ['admin', 'organizer'],
+    })
 
 @login_required
 def venue_details(request, pk):
@@ -1350,8 +1368,6 @@ def venue_details(request, pk):
 
 @login_required
 def create_venue(request):
-    if not request.user.is_staff:
-        raise PermissionDenied("Only staff members can create venues.")
     if request.method == 'POST':
         form = VenueForm(request.POST)
         if form.is_valid():
@@ -2259,7 +2275,8 @@ def attendance_list(request):
 @login_required
 def qr_scanner_view(request):
     # Only staff or designated organizers can access the scanner
-    if not request.user.is_staff:
+    user_role = getattr(getattr(request.user, 'profile', None), 'role', 'viewer')
+    if not request.user.is_staff and user_role not in ['admin', 'organizer']:
         # Check if the user is organizer of at least one event
         if not Event.objects.filter(organizers=request.user).exists():
             raise PermissionDenied("Only event coordinators and staff can access the check-in scanner.")
@@ -2416,3 +2433,71 @@ def custom_403_view(request, exception=None):
 def custom_400_view(request, exception=None):
     return render(request, 'errors/400.html', status=400)
 
+# ==========================================================================
+# FOR CHATBOT AI
+# ==========================================================================
+
+@login_required
+def ai_chat(request):
+    if request.method == 'GET':
+        return render(request, 'chat/ai_chat.html')
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST requests are supported.'}, status=405)
+
+    message = request.POST.get("message", "").strip()
+
+    if not message:
+        return JsonResponse({"error": "Please enter a message."}, status=400)
+
+    api_key = settings.OPENAI_API_KEY
+    if not api_key:
+        return JsonResponse(
+            {"error": "The AI assistant is not configured. Add OPENAI_API_KEY to your .env file."},
+            status=503,
+        )
+
+    try:
+        client = OpenAI(api_key=api_key)
+        events = Event.objects.filter(
+            visibility=Event.Visibility.PUBLIC,
+            status__in=[Event.EventStatus.ACTIVE, Event.EventStatus.PENDING],
+            end_date__gte=date.today(),
+        ).select_related('category', 'venue').order_by('start_date')[:50]
+        event_context = '\n'.join(
+            f"- {event.name}: {event.start_date} to {event.end_date}; "
+            f"category {event.category.name}; venue {event.venue.name if event.venue else 'TBD'}"
+            for event in events
+        ) or 'No upcoming public events are currently listed.'
+
+        response = client.responses.create(
+            model=settings.OPENAI_MODEL,
+            instructions=(
+                "You are EventOS AI Assistant. Help users with college "
+                "events, registration, tickets, venues, attendance and "
+                "other EventOS features. Give clear and concise answers. "
+                "Only state event facts supported by the supplied data. "
+                "If the data does not answer the question, say so clearly.\n\n"
+                f"Upcoming public events:\n{event_context}"
+            ),
+            input=message
+        )
+
+        return JsonResponse({"reply": response.output_text})
+
+    except RateLimitError:
+        return JsonResponse(
+            {"error": "The OpenAI account has no API credits remaining. Add credits or use a funded API key."},
+            status=503,
+        )
+    except AuthenticationError:
+        return JsonResponse(
+            {"error": "The OpenAI API key is invalid or revoked. Create a new key and update .env."},
+            status=503,
+        )
+    except Exception:
+        logger.exception("AI assistant request failed")
+        return JsonResponse(
+            {"error": "The AI assistant is temporarily unavailable. Check the server logs for details."},
+            status=503,
+        )

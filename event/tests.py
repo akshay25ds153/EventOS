@@ -154,6 +154,17 @@ class MessagingTests(TestCase):
         response = self.client.get(reverse('chat_dashboard'))
         self.assertRedirects(response, f"/login/?next={reverse('chat_dashboard')}")
 
+    def test_ai_assistant_page_requires_login(self):
+        response = self.client.get(reverse('ai_chat'))
+        self.assertRedirects(response, f"/login/?next={reverse('ai_chat')}")
+
+    def test_ai_assistant_reports_missing_api_key(self):
+        self.client.login(username='usera', password='Password123')
+        with self.settings(OPENAI_API_KEY=None):
+            response = self.client.post(reverse('ai_chat'), {'message': 'What events are available?'})
+        self.assertEqual(response.status_code, 503)
+        self.assertIn('OPENAI_API_KEY', response.json()['error'])
+
     def test_direct_message_creation_and_unread_count(self):
         self.client.login(username='usera', password='Password123')
         

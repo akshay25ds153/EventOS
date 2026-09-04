@@ -1,261 +1,435 @@
-{% extends 'base/base.html' %}
-{% load static %}
-
-{% block title %}Events Schedule | EventOS{% endblock %}
-
-{% block breadcrumbs %}
+{% extends 'base/base.html' %} {% load static %} {% block title %}Events
+Schedule | EventOS{% endblock %} {% block breadcrumbs %}
 <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
 <li class="breadcrumb-item active" aria-current="page">Events</li>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <!-- Page Title & Header -->
 <div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <h3 class="fw-extrabold text-dark mb-1">Events Schedule</h3>
-        <p class="text-muted small mb-0">Browse, filter, and schedule campus events, conferences, and workshops.</p>
+  <div>
+    <h3 class="fw-extrabold text-dark mb-1">Events Schedule</h3>
+    <p class="text-muted small mb-0">
+      Browse, filter, and schedule campus events, conferences, and workshops.
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <a
+      href="{% url 'event_calendar' %}"
+      class="btn btn-outline-dark rounded-pill px-4 py-2 fw-bold small shadow-sm"
+    >
+      <i class="bi bi-calendar-week me-1"></i> Calendar View
+    </a>
+    {% if can_export_events %}
+    <div class="dropdown">
+      <button
+        class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold small shadow-sm dropdown-toggle"
+        type="button"
+        id="exportDropdown"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+      >
+        <i class="bi bi-download me-1"></i> Export
+      </button>
+      <ul
+        class="dropdown-menu dropdown-menu-end shadow border-0 mt-2"
+        aria-labelledby="exportDropdown"
+      >
+        <li>
+          <button
+            class="dropdown-item py-2 small"
+            onclick="exportData('csv', this)"
+          >
+            <i class="bi bi-filetype-csv me-2 text-success"></i> Excel/CSV
+          </button>
+        </li>
+        <li>
+          <button
+            class="dropdown-item py-2 small"
+            onclick="exportData('pdf', this)"
+          >
+            <i class="bi bi-file-pdf me-2 text-danger"></i> PDF Document
+          </button>
+        </li>
+      </ul>
     </div>
-    <div class="d-flex gap-2">
-        <a href="{% url 'event_calendar' %}" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-bold small shadow-sm">
-            <i class="bi bi-calendar-week me-1"></i> Calendar View
-        </a>
-        {% if request.user.is_staff or request.user.profile.role == 'admin' or request.user.profile.role == 'organizer' %}
-        <div class="dropdown">
-            <button class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold small shadow-sm dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-download me-1"></i> Export
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="exportDropdown">
-                <li><button class="dropdown-item py-2 small" onclick="exportData('csv', this)"><i class="bi bi-filetype-csv me-2 text-success"></i> Excel/CSV</button></li>
-                <li><button class="dropdown-item py-2 small" onclick="exportData('pdf', this)"><i class="bi bi-file-pdf me-2 text-danger"></i> PDF Document</button></li>
-            </ul>
-        </div>
-        {% endif %}
-        {% if request.user.is_staff %}
-        <a href="{% url 'create_event' %}" class="btn btn-dark rounded-pill px-4 py-2 fw-bold small shadow-sm">
-            <i class="bi bi-plus-lg me-1"></i> Create Event
-        </a>
-        {% endif %}
-    </div>
+    {% endif %} {% if request.user.is_authenticated %}
+    <a
+      href="{% url 'create_event' %}"
+      class="btn btn-dark rounded-pill px-4 py-2 fw-bold small shadow-sm"
+    >
+      <i class="bi bi-plus-lg me-1"></i> Create Event
+    </a>
+    {% endif %}
+  </div>
 </div>
 
 <!-- Controls Bar: Filter Pills & View Switcher -->
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-    <div class="d-flex align-items-center gap-2 overflow-x-auto pb-1">
-        <span class="text-muted extra-small fw-bold text-uppercase me-1">Filter Status:</span>
-        <button type="button" class="filter-pill active" onclick="filterEvents('all', this)">All Events</button>
-        <button type="button" class="filter-pill" onclick="filterEvents('Active', this)">● Active</button>
-        <button type="button" class="filter-pill" onclick="filterEvents('Pending', this)">● Pending</button>
-        <button type="button" class="filter-pill" onclick="filterEvents('Completed', this)">● Completed</button>
-    </div>
+<div
+  class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4"
+>
+  <div class="d-flex align-items-center gap-2 overflow-x-auto pb-1">
+    <span class="text-muted extra-small fw-bold text-uppercase me-1"
+      >Filter Status:</span
+    >
+    <button
+      type="button"
+      class="filter-pill active"
+      onclick="filterEvents('all', this)"
+    >
+      All Events
+    </button>
+    <button
+      type="button"
+      class="filter-pill"
+      onclick="filterEvents('Active', this)"
+    >
+      ● Active
+    </button>
+    <button
+      type="button"
+      class="filter-pill"
+      onclick="filterEvents('Pending', this)"
+    >
+      ● Pending
+    </button>
+    <button
+      type="button"
+      class="filter-pill"
+      onclick="filterEvents('Completed', this)"
+    >
+      ● Completed
+    </button>
+  </div>
 
-    <!-- Grid / Table View Switcher -->
-    <div class="btn-group rounded-pill p-1 bg-light border" role="group" aria-label="View Switcher">
-        <button type="button" class="btn btn-sm rounded-pill px-3 py-1 fw-bold extra-small active" id="btnGridView" onclick="switchView('grid')">
-            <i class="bi bi-grid-3x3-gap-fill me-1"></i> Grid
-        </button>
-        <button type="button" class="btn btn-sm rounded-pill px-3 py-1 fw-bold extra-small text-muted" id="btnTableView" onclick="switchView('table')">
-            <i class="bi bi-list-ul me-1"></i> Table
-        </button>
-    </div>
+  <!-- Grid / Table View Switcher -->
+  <div
+    class="btn-group rounded-pill p-1 bg-light border"
+    role="group"
+    aria-label="View Switcher"
+  >
+    <button
+      type="button"
+      class="btn btn-sm rounded-pill px-3 py-1 fw-bold extra-small active"
+      id="btnGridView"
+      onclick="switchView('grid')"
+    >
+      <i class="bi bi-grid-3x3-gap-fill me-1"></i> Grid
+    </button>
+    <button
+      type="button"
+      class="btn btn-sm rounded-pill px-3 py-1 fw-bold extra-small text-muted"
+      id="btnTableView"
+      onclick="switchView('table')"
+    >
+      <i class="bi bi-list-ul me-1"></i> Table
+    </button>
+  </div>
 </div>
 
 <!-- Grid View Container (Default) -->
 <div id="eventsGridView" class="row g-4 mb-4">
-    {% for event in events %}
-        <div class="col-md-6 col-lg-4 event-item" data-status="{{ event.status }}">
-            <div class="card-aether-white h-100 d-flex flex-column justify-content-between">
-                <div>
-                    <!-- Category Badge & Circle Arrow -->
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <span class="badge bg-light text-dark border rounded-pill px-3 py-1 extra-small fw-semibold">
-                            {{ event.category.name }}
-                        </span>
-                        <a href="{% url 'event_details' event.id %}" class="btn-circle-arrow" title="View Event Details">
-                            <i class="bi bi-arrow-up-right"></i>
-                        </a>
-                    </div>
-                    
-                    <h5 class="fw-extrabold text-dark mb-1">
-                        <a href="{% url 'event_details' event.id %}" class="text-dark text-decoration-none">{{ event.name }}</a>
-                    </h5>
-                    <p class="text-muted extra-small mb-3">
-                        <i class="bi bi-geo-alt me-1 text-primary"></i>{{ event.venue }}
-                    </p>
-
-                    <!-- Metrics Container -->
-                    <div class="row g-2 mb-3 p-3 rounded-4" style="background-color: var(--bs-tertiary-bg, #F8FAFC); border: 1px solid var(--bs-border-color, #F1F5F9);">
-                        <div class="col-6">
-                            <span class="text-muted extra-small d-block fw-bold text-uppercase">Dates</span>
-                            <span class="fw-bold text-dark extra-small d-block mt-0.5">
-                                {{ event.start_date|date:"d M" }} - {{ event.end_date|date:"d M, Y" }}
-                            </span>
-                        </div>
-                        <div class="col-6 text-end">
-                            <span class="text-muted extra-small d-block fw-bold text-uppercase">Capacity</span>
-                            <h5 class="fw-extrabold text-dark mb-0">{{ event.max_participants }} <span class="fs-6 text-muted fw-normal">members</span></h5>
-                        </div>
-                    </div>
-
-                    <div class="d-flex align-items-center justify-content-between extra-small">
-                        <span class="text-muted fw-semibold"><i class="bi bi-clock me-1 text-primary"></i>{{ event.start_time|time:"H:i" }} - {{ event.end_time|time:"H:i" }}</span>
-                        {% if event.status == 'Active' %}
-                        <span class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1 extra-small fw-bold">● Active</span>
-                        {% elif event.status == 'Pending' %}
-                        <span class="badge bg-warning-subtle text-warning rounded-pill px-2.5 py-1 extra-small fw-bold">● Pending</span>
-                        {% else %}
-                        <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1 extra-small fw-bold">● Completed</span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Footer Actions -->
-                <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-3">
-                    <a href="{% url 'event_details' event.id %}" class="btn btn-sm btn-dark rounded-pill px-3 py-1.5 fw-bold extra-small">
-                        <i class="bi bi-calendar-event me-1"></i> View Event
-                    </a>
-                    {% if request.user.is_staff %}
-                    <div class="d-flex align-items-center gap-2">
-                        <a href="{% url 'edit_event' event.id %}" class="btn btn-sm btn-light rounded-circle text-primary" style="width: 32px; height: 32px;" title="Edit Event">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <a href="{% url 'delete_event' event.id %}" class="btn btn-sm btn-light rounded-circle text-danger" style="width: 32px; height: 32px;" title="Delete Event">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+  {% for event in events %}
+  <div class="col-md-6 col-lg-4 event-item" data-status="{{ event.status }}">
+    <div
+      class="card-aether-white h-100 d-flex flex-column justify-content-between"
+    >
+      <div>
+        <!-- Category Badge & Circle Arrow -->
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <span
+            class="badge bg-light text-dark border rounded-pill px-3 py-1 extra-small fw-semibold"
+          >
+            {{ event.category.name }}
+          </span>
+          <a
+            href="{% url 'event_details' event.id %}"
+            class="btn-circle-arrow"
+            title="View Event Details"
+          >
+            <i class="bi bi-arrow-up-right"></i>
+          </a>
         </div>
-    {% empty %}
-        <div class="col-12">
-            <div class="card-aether-white text-center py-5">
-                <i class="bi bi-calendar-x fs-1 text-muted d-block mb-2"></i>
-                <h6 class="fw-bold text-dark">No Events Scheduled</h6>
-                <p class="text-muted extra-small mb-3">No campus events found in the database.</p>
-                {% if request.user.is_staff %}
-                <a href="{% url 'create_event' %}" class="btn btn-dark rounded-pill px-4 btn-sm fw-bold">Create First Event</a>
-                {% endif %}
-            </div>
+
+        <h5 class="fw-extrabold text-dark mb-1">
+          <a
+            href="{% url 'event_details' event.id %}"
+            class="text-dark text-decoration-none"
+            >{{ event.name }}</a
+          >
+        </h5>
+        <p class="text-muted extra-small mb-3">
+          <i class="bi bi-geo-alt me-1 text-primary"></i>{{ event.venue }}
+        </p>
+
+        <!-- Metrics Container -->
+        <div
+          class="row g-2 mb-3 p-3 rounded-4"
+          style="
+            background-color: var(--bs-tertiary-bg, #f8fafc);
+            border: 1px solid var(--bs-border-color, #f1f5f9);
+          "
+        >
+          <div class="col-6">
+            <span class="text-muted extra-small d-block fw-bold text-uppercase"
+              >Dates</span
+            >
+            <span class="fw-bold text-dark extra-small d-block mt-0.5">
+              {{ event.start_date|date:"d M" }} - {{ event.end_date|date:"d M,
+              Y" }}
+            </span>
+          </div>
+          <div class="col-6 text-end">
+            <span class="text-muted extra-small d-block fw-bold text-uppercase"
+              >Capacity</span
+            >
+            <h5 class="fw-extrabold text-dark mb-0">
+              {{ event.max_participants }}
+              <span class="fs-6 text-muted fw-normal">members</span>
+            </h5>
+          </div>
         </div>
-    {% endfor %}
+
+        <div
+          class="d-flex align-items-center justify-content-between extra-small"
+        >
+          <span class="text-muted fw-semibold"
+            ><i class="bi bi-clock me-1 text-primary"></i>{{
+            event.start_time|time:"H:i" }} - {{ event.end_time|time:"H:i"
+            }}</span
+          >
+          {% if event.status == 'Active' %}
+          <span
+            class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1 extra-small fw-bold"
+            >● Active</span
+          >
+          {% elif event.status == 'Pending' %}
+          <span
+            class="badge bg-warning-subtle text-warning rounded-pill px-2.5 py-1 extra-small fw-bold"
+            >● Pending</span
+          >
+          {% else %}
+          <span
+            class="badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1 extra-small fw-bold"
+            >● Completed</span
+          >
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div
+        class="d-flex align-items-center justify-content-between pt-3 border-top mt-3"
+      >
+        <a
+          href="{% url 'event_details' event.id %}"
+          class="btn btn-sm btn-dark rounded-pill px-3 py-1.5 fw-bold extra-small"
+        >
+          <i class="bi bi-calendar-event me-1"></i> View Event
+        </a>
+        {% if request.user.is_staff %}
+        <div class="d-flex align-items-center gap-2">
+          <a
+            href="{% url 'edit_event' event.id %}"
+            class="btn btn-sm btn-light rounded-circle text-primary"
+            style="width: 32px; height: 32px"
+            title="Edit Event"
+          >
+            <i class="bi bi-pencil"></i>
+          </a>
+          <a
+            href="{% url 'delete_event' event.id %}"
+            class="btn btn-sm btn-light rounded-circle text-danger"
+            style="width: 32px; height: 32px"
+            title="Delete Event"
+          >
+            <i class="bi bi-trash"></i>
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12">
+    <div class="card-aether-white text-center py-5">
+      <i class="bi bi-calendar-x fs-1 text-muted d-block mb-2"></i>
+      <h6 class="fw-bold text-dark">No Events Scheduled</h6>
+      <p class="text-muted extra-small mb-3">
+        No campus events found in the database.
+      </p>
+      {% if request.user.is_staff %}
+      <a
+        href="{% url 'create_event' %}"
+        class="btn btn-dark rounded-pill px-4 btn-sm fw-bold"
+        >Create First Event</a
+      >
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
 </div>
 
 <!-- Table View Container (Hidden by default) -->
 <div id="eventsTableView" class="card-aether-white d-none mb-4">
-    <div class="table-responsive">
-        <table class="table align-middle border-0 mb-0" id="eventsTable">
-            <thead>
-                <tr class="text-muted extra-small text-uppercase border-bottom">
-                    <th class="border-0 pb-3">Banner</th>
-                    <th class="border-0 pb-3">Event Name</th>
-                    <th class="border-0 pb-3">Category</th>
-                    <th class="border-0 pb-3">Venue</th>
-                    <th class="border-0 pb-3">Dates</th>
-                    <th class="border-0 pb-3">Status</th>
-                    <th class="border-0 pb-3 text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for event in events %}
-                    <tr class="event-row event-item border-bottom-0" data-status="{{ event.status }}">
-                        <td class="py-3">
-                            {% if event.banner %}
-                                <img src="{{ event.banner.url }}" class="rounded-4 object-fit-cover" style="width: 54px; height: 40px;" alt="{{ event.name }}">
-                            {% else %}
-                                <div class="bg-light rounded-4 d-flex align-items-center justify-content-center fw-bold text-dark" style="width: 54px; height: 40px;">
-                                    {{ event.name|first }}
-                                </div>
-                            {% endif %}
-                        </td>
-                        <td class="py-3">
-                            <a href="{% url 'event_details' event.id %}" class="fw-bold text-dark text-decoration-none d-block">{{ event.name }}</a>
-                            <span class="text-muted extra-small">Cap: {{ event.max_participants }} members</span>
-                        </td>
-                        <td class="py-3">
-                            <span class="badge bg-light text-dark border rounded-pill px-3 py-1 small fw-semibold">
-                                {{ event.category.name }}
-                            </span>
-                        </td>
-                        <td class="py-3 text-muted small">
-                            <i class="bi bi-geo-alt me-1 text-primary"></i> {{ event.venue }}
-                        </td>
-                        <td class="py-3 text-muted extra-small">
-                            {{ event.start_date|date:"d M" }} - {{ event.end_date|date:"d M, Y" }}
-                        </td>
-                        <td class="py-3">
-                            {% if event.status == 'Active' %}
-                            <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1.5 small fw-bold">● Active</span>
-                            {% elif event.status == 'Pending' %}
-                            <span class="badge bg-warning-subtle text-warning rounded-pill px-3 py-1.5 small fw-bold">● Pending</span>
-                            {% else %}
-                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-1.5 small fw-bold">● Completed</span>
-                            {% endif %}
-                        </td>
-                        <td class="py-3 text-end">
-                            <div class="d-flex align-items-center justify-content-end gap-1">
-                                <a href="{% url 'event_details' event.id %}" class="btn btn-sm btn-light rounded-circle" style="width: 32px; height: 32px;" title="View Details">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                {% if request.user.is_staff %}
-                                <a href="{% url 'edit_event' event.id %}" class="btn btn-sm btn-light rounded-circle text-primary" style="width: 32px; height: 32px;" title="Edit Event">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="{% url 'delete_event' event.id %}" class="btn btn-sm btn-light rounded-circle text-danger" style="width: 32px; height: 32px;" title="Delete Event">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center py-5 text-muted small">No scheduled events found in the database.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+  <div class="table-responsive">
+    <table class="table align-middle border-0 mb-0" id="eventsTable">
+      <thead>
+        <tr class="text-muted extra-small text-uppercase border-bottom">
+          <th class="border-0 pb-3">Banner</th>
+          <th class="border-0 pb-3">Event Name</th>
+          <th class="border-0 pb-3">Category</th>
+          <th class="border-0 pb-3">Venue</th>
+          <th class="border-0 pb-3">Dates</th>
+          <th class="border-0 pb-3">Status</th>
+          <th class="border-0 pb-3 text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in events %}
+        <tr
+          class="event-row event-item border-bottom-0"
+          data-status="{{ event.status }}"
+        >
+          <td class="py-3">
+            {% if event.banner %}
+            <img
+              src="{{ event.banner.url }}"
+              class="rounded-4 object-fit-cover"
+              style="width: 54px; height: 40px"
+              alt="{{ event.name }}"
+            />
+            {% else %}
+            <div
+              class="bg-light rounded-4 d-flex align-items-center justify-content-center fw-bold text-dark"
+              style="width: 54px; height: 40px"
+            >
+              {{ event.name|first }}
+            </div>
+            {% endif %}
+          </td>
+          <td class="py-3">
+            <a
+              href="{% url 'event_details' event.id %}"
+              class="fw-bold text-dark text-decoration-none d-block"
+              >{{ event.name }}</a
+            >
+            <span class="text-muted extra-small"
+              >Cap: {{ event.max_participants }} members</span
+            >
+          </td>
+          <td class="py-3">
+            <span
+              class="badge bg-light text-dark border rounded-pill px-3 py-1 small fw-semibold"
+            >
+              {{ event.category.name }}
+            </span>
+          </td>
+          <td class="py-3 text-muted small">
+            <i class="bi bi-geo-alt me-1 text-primary"></i> {{ event.venue }}
+          </td>
+          <td class="py-3 text-muted extra-small">
+            {{ event.start_date|date:"d M" }} - {{ event.end_date|date:"d M, Y"
+            }}
+          </td>
+          <td class="py-3">
+            {% if event.status == 'Active' %}
+            <span
+              class="badge bg-success-subtle text-success rounded-pill px-3 py-1.5 small fw-bold"
+              >● Active</span
+            >
+            {% elif event.status == 'Pending' %}
+            <span
+              class="badge bg-warning-subtle text-warning rounded-pill px-3 py-1.5 small fw-bold"
+              >● Pending</span
+            >
+            {% else %}
+            <span
+              class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-1.5 small fw-bold"
+              >● Completed</span
+            >
+            {% endif %}
+          </td>
+          <td class="py-3 text-end">
+            <div class="d-flex align-items-center justify-content-end gap-1">
+              <a
+                href="{% url 'event_details' event.id %}"
+                class="btn btn-sm btn-light rounded-circle"
+                style="width: 32px; height: 32px"
+                title="View Details"
+              >
+                <i class="bi bi-eye"></i>
+              </a>
+              {% if request.user.is_staff %}
+              <a
+                href="{% url 'edit_event' event.id %}"
+                class="btn btn-sm btn-light rounded-circle text-primary"
+                style="width: 32px; height: 32px"
+                title="Edit Event"
+              >
+                <i class="bi bi-pencil"></i>
+              </a>
+              <a
+                href="{% url 'delete_event' event.id %}"
+                class="btn btn-sm btn-light rounded-circle text-danger"
+                style="width: 32px; height: 32px"
+                title="Delete Event"
+              >
+                <i class="bi bi-trash"></i>
+              </a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center py-5 text-muted small">
+            No scheduled events found in the database.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
+{% endblock %} {% block extra_js %}
 <script>
-function switchView(view) {
-    const gridView = document.getElementById('eventsGridView');
-    const tableView = document.getElementById('eventsTableView');
-    const btnGrid = document.getElementById('btnGridView');
-    const btnTable = document.getElementById('btnTableView');
+  function switchView(view) {
+    const gridView = document.getElementById("eventsGridView");
+    const tableView = document.getElementById("eventsTableView");
+    const btnGrid = document.getElementById("btnGridView");
+    const btnTable = document.getElementById("btnTableView");
 
-    if (view === 'grid') {
-        gridView.classList.remove('d-none');
-        tableView.classList.add('d-none');
-        btnGrid.classList.add('active', 'btn-dark');
-        btnGrid.classList.remove('text-muted');
-        btnTable.classList.remove('active', 'btn-dark');
-        btnTable.classList.add('text-muted');
+    if (view === "grid") {
+      gridView.classList.remove("d-none");
+      tableView.classList.add("d-none");
+      btnGrid.classList.add("active", "btn-dark");
+      btnGrid.classList.remove("text-muted");
+      btnTable.classList.remove("active", "btn-dark");
+      btnTable.classList.add("text-muted");
     } else {
-        gridView.classList.add('d-none');
-        tableView.classList.remove('d-none');
-        btnTable.classList.add('active', 'btn-dark');
-        btnTable.classList.remove('text-muted');
-        btnGrid.classList.remove('active', 'btn-dark');
-        btnGrid.classList.add('text-muted');
+      gridView.classList.add("d-none");
+      tableView.classList.remove("d-none");
+      btnTable.classList.add("active", "btn-dark");
+      btnTable.classList.remove("text-muted");
+      btnGrid.classList.remove("active", "btn-dark");
+      btnGrid.classList.add("text-muted");
     }
-}
+  }
 
-function filterEvents(status, btn) {
-    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
+  function filterEvents(status, btn) {
+    document
+      .querySelectorAll(".filter-pill")
+      .forEach((p) => p.classList.remove("active"));
+    btn.classList.add("active");
 
-    const items = document.querySelectorAll('.event-item');
-    items.forEach(item => {
-        const itemStatus = item.getAttribute('data-status');
-        if (status === 'all' || itemStatus === status) {
-            item.style.display = '';
-        } else {
-            item.style.display = 'none';
-        }
+    const items = document.querySelectorAll(".event-item");
+    items.forEach((item) => {
+      const itemStatus = item.getAttribute("data-status");
+      if (status === "all" || itemStatus === status) {
+        item.style.display = "";
+      } else {
+        item.style.display = "none";
+      }
     });
-}
+  }
 </script>
 {% endblock %}

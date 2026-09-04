@@ -1,158 +1,274 @@
-<div class="px-3 py-3 mb-2 d-flex align-items-center justify-content-between sidebar-brand-container">
-    <a href="{% url 'dashboard' %}" class="d-flex align-items-center gap-2 text-decoration-none sidebar-brand-link" data-tooltip="EventOS">
-        <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm sidebar-brand-icon" style="width: 36px; height: 36px; flex-shrink: 0;">
-            <i class="bi bi-calendar-check-fill fs-6"></i>
-        </div>
-        <span class="fw-bold fs-5 text-dark tracking-tight sidebar-brand-text">EventOS</span>
-    </a>
-    <span class="badge bg-light text-muted border rounded-pill px-2 py-1 small d-none d-lg-inline-block sidebar-brand-badge">v1.0</span>
+<div
+  class="px-3 py-3 mb-2 d-flex align-items-center justify-content-between sidebar-brand-container"
+>
+  <a
+    href="{% url 'dashboard' %}"
+    class="d-flex align-items-center gap-2 text-decoration-none sidebar-brand-link"
+    data-tooltip="EventOS"
+  >
+    <div
+      class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm sidebar-brand-icon"
+      style="width: 36px; height: 36px; flex-shrink: 0"
+    >
+      <i class="bi bi-calendar-check-fill fs-6"></i>
+    </div>
+    <span class="fw-bold fs-5 text-dark tracking-tight sidebar-brand-text"
+      >EventOS</span
+    >
+  </a>
+  <span
+    class="badge bg-light text-muted border rounded-pill px-2 py-1 small d-none d-lg-inline-block sidebar-brand-badge"
+    >v1.0</span
+  >
 </div>
 
 <!-- Quick Command Palette Trigger Button -->
 <div class="px-3 mb-3 sidebar-cmd-container">
-    <button type="button" onclick="document.getElementById('cmdPalette').classList.add('active'); document.getElementById('cmdInput').focus();" class="btn btn-light w-100 border text-start text-muted d-flex align-items-center justify-content-between rounded-pill py-2 px-3 small sidebar-cmd-btn" data-tooltip="Quick Search (⌘K)">
-        <span class="d-flex align-items-center"><i class="bi bi-search me-2 sidebar-cmd-icon"></i><span class="sidebar-cmd-text">Search...</span></span>
-        <kbd class="bg-white text-muted border rounded px-1 small sidebar-cmd-kbd">⌘K</kbd>
-    </button>
+  <button
+    type="button"
+    onclick="
+      document.getElementById('cmdPalette').classList.add('active');
+      document.getElementById('cmdInput').focus();
+    "
+    class="btn btn-light w-100 border text-start text-muted d-flex align-items-center justify-content-between rounded-pill py-2 px-3 small sidebar-cmd-btn"
+    data-tooltip="Quick Search (⌘K)"
+  >
+    <span class="d-flex align-items-center"
+      ><i class="bi bi-search me-2 sidebar-cmd-icon"></i
+      ><span class="sidebar-cmd-text">Search...</span></span
+    >
+    <kbd class="bg-white text-muted border rounded px-1 small sidebar-cmd-kbd"
+      >⌘K</kbd
+    >
+  </button>
 </div>
 
 <!-- Navigation Links -->
 <ul class="nav nav-pills flex-column px-2 gap-1 mb-auto sidebar-nav-list">
+  <li
+    class="px-3 pt-2 pb-1 text-muted small fw-bold text-uppercase sidebar-section-header"
+    style="letter-spacing: 0.05em; font-size: 0.725rem"
+  >
+    Main
+  </li>
 
-    <li class="px-3 pt-2 pb-1 text-muted small fw-bold text-uppercase sidebar-section-header" style="letter-spacing: 0.05em; font-size: 0.725rem;">Main</li>
+  <!-- Dashboard -->
+  <li class="nav-item">
+    <a
+      href="{% url 'dashboard' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if request.path == '/dashboard/' %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      id="nav-dashboard"
+      data-tooltip="Dashboard"
+    >
+      <i class="bi bi-grid-1x2-fill"></i>
+      <span class="fw-semibold">Dashboard</span>
+    </a>
+  </li>
 
-    <!-- Dashboard -->
-    <li class="nav-item">
-        <a href="{% url 'dashboard' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if request.path == '/dashboard/' %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" id="nav-dashboard" data-tooltip="Dashboard">
-            <i class="bi bi-grid-1x2-fill"></i>
-            <span class="fw-semibold">Dashboard</span>
-        </a>
-    </li>
+  <!-- Joined Events / Ticket Portal -->
+  <li class="nav-item">
+    <a
+      href="{% url 'joined_events' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if request.path == '/joined-events/' %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="My Tickets"
+    >
+      <i class="bi bi-ticket-perforated-fill"></i>
+      <span class="fw-semibold">My Tickets</span>
+    </a>
+  </li>
 
-    <!-- Joined Events / Ticket Portal -->
-    <li class="nav-item">
-        <a href="{% url 'joined_events' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if request.path == '/joined-events/' %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="My Tickets">
-            <i class="bi bi-ticket-perforated-fill"></i>
-            <span class="fw-semibold">My Tickets</span>
-        </a>
-    </li>
+  <!-- Announcements -->
+  <li class="nav-item">
+    <a
+      href="{% url 'announcement_list' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/announcement/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="Announcements"
+    >
+      <i class="bi bi-megaphone-fill"></i>
+      <span class="fw-semibold">Announcements</span>
+    </a>
+  </li>
 
-    <!-- Announcements -->
-    <li class="nav-item">
-        <a href="{% url 'announcement_list' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/announcement/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="Announcements">
-            <i class="bi bi-megaphone-fill"></i>
-            <span class="fw-semibold">Announcements</span>
-        </a>
-    </li>
+  <li
+    class="px-3 pt-3 pb-1 text-muted small fw-bold text-uppercase sidebar-section-header"
+    style="letter-spacing: 0.05em; font-size: 0.725rem"
+  >
+    Logistics
+  </li>
 
+  {% if request.user.is_authenticated %}
+  <!-- Category -->
+  <li class="nav-item">
+    <a
+      href="{% url 'category_list' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/category/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="Categories"
+    >
+      <i class="bi bi-tags-fill"></i>
+      <span class="fw-semibold">Categories</span>
+    </a>
+  </li>
+  {% endif %}
 
-    <li class="px-3 pt-3 pb-1 text-muted small fw-bold text-uppercase sidebar-section-header" style="letter-spacing: 0.05em; font-size: 0.725rem;">Logistics</li>
+  <!-- Events -->
+  <li class="nav-item">
+    <a
+      href="{% url 'event_list' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/event/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="Events Schedule"
+    >
+      <i class="bi bi-calendar-event-fill"></i>
+      <span class="fw-semibold">Events Schedule</span>
+    </a>
+  </li>
 
-    {% if request.user.is_staff %}
-    <!-- Category -->
-    <li class="nav-item">
-        <a href="{% url 'category_list' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/category/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="Categories">
-            <i class="bi bi-tags-fill"></i>
-            <span class="fw-semibold">Categories</span>
-        </a>
-    </li>
-    {% endif %}
+  {% if request.user.is_authenticated %}
+  <!-- Venues -->
+  <li class="nav-item">
+    <a
+      href="{% url 'venue_list' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/venue/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="Venues"
+    >
+      <i class="bi bi-geo-alt-fill"></i>
+      <span class="fw-semibold">Venues</span>
+    </a>
+  </li>
+  {% endif %} {% if request.user.is_staff %}
+  <!-- Members -->
+  <li class="nav-item">
+    <a
+      href="{% url 'member_list' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/member/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="Members & Staff"
+    >
+      <i class="bi bi-people-fill"></i>
+      <span class="fw-semibold">Members</span>
+    </a>
+  </li>
 
-    <!-- Events -->
-    <li class="nav-item">
-        <a href="{% url 'event_list' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/event/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="Events Schedule">
-            <i class="bi bi-calendar-event-fill"></i>
-            <span class="fw-semibold">Events Schedule</span>
-        </a>
-    </li>
+  <!-- Resources -->
+  <li class="nav-item">
+    <a
+      href="{% url 'resource_list' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/resource/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="Resources"
+    >
+      <i class="bi bi-box-seam-fill"></i>
+      <span class="fw-semibold">Resources</span>
+    </a>
+  </li>
+  {% endif %}
 
-    {% if request.user.is_staff %}
-    <!-- Members -->
-    <li class="nav-item">
-        <a href="{% url 'member_list' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/member/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="Members & Staff">
-            <i class="bi bi-people-fill"></i>
-            <span class="fw-semibold">Members</span>
-        </a>
-    </li>
+  <li
+    class="px-3 pt-3 pb-1 text-muted small fw-bold text-uppercase sidebar-section-header"
+    style="letter-spacing: 0.05em; font-size: 0.725rem"
+  >
+    Financials
+  </li>
 
-    <!-- Venues -->
-    <li class="nav-item">
-        <a href="{% url 'venue_list' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/venue/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="Venues">
-            <i class="bi bi-geo-alt-fill"></i>
-            <span class="fw-semibold">Venues</span>
-        </a>
-    </li>
+  {% if request.user.is_staff %}
+  <!-- Vendors -->
+  <li class="nav-item">
+    <a
+      href="{% url 'vendor_list' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/vendor/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="Vendors"
+    >
+      <i class="bi bi-shop"></i>
+      <span class="fw-semibold">Vendors</span>
+    </a>
+  </li>
 
-    <!-- Resources -->
-    <li class="nav-item">
-        <a href="{% url 'resource_list' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/resource/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="Resources">
-            <i class="bi bi-box-seam-fill"></i>
-            <span class="fw-semibold">Resources</span>
-        </a>
-    </li>
-    {% endif %}
+  <!-- Contracts -->
+  <li class="nav-item">
+    <a
+      href="{% url 'contract_list' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/contract/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="Contracts"
+    >
+      <i class="bi bi-file-earmark-text-fill"></i>
+      <span class="fw-semibold">Contracts</span>
+    </a>
+  </li>
 
-    <li class="px-3 pt-3 pb-1 text-muted small fw-bold text-uppercase sidebar-section-header" style="letter-spacing: 0.05em; font-size: 0.725rem;">Financials</li>
+  <!-- Budgets -->
+  <li class="nav-item">
+    <a
+      href="{% url 'budget_list' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/budget/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="Budgets"
+    >
+      <i class="bi bi-wallet2"></i>
+      <span class="fw-semibold">Budgets</span>
+    </a>
+  </li>
 
-    {% if request.user.is_staff %}
-    <!-- Vendors -->
-    <li class="nav-item">
-        <a href="{% url 'vendor_list' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/vendor/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="Vendors">
-            <i class="bi bi-shop"></i>
-            <span class="fw-semibold">Vendors</span>
-        </a>
-    </li>
+  <!-- QR Checkin Scanner -->
+  <li class="nav-item">
+    <a
+      href="{% url 'qr_scanner' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if request.path == '/checkin/' %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="QR Scanner"
+    >
+      <i class="bi bi-qr-code-scan"></i>
+      <span class="fw-semibold">QR Check-in</span>
+    </a>
+  </li>
+  {% endif %}
 
-    <!-- Contracts -->
-    <li class="nav-item">
-        <a href="{% url 'contract_list' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/contract/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="Contracts">
-            <i class="bi bi-file-earmark-text-fill"></i>
-            <span class="fw-semibold">Contracts</span>
-        </a>
-    </li>
+  <li
+    class="px-3 pt-3 pb-1 text-muted small fw-bold text-uppercase sidebar-section-header"
+    style="letter-spacing: 0.05em; font-size: 0.725rem"
+  >
+    System
+  </li>
 
-    <!-- Budgets -->
-    <li class="nav-item">
-        <a href="{% url 'budget_list' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if '/budget/' in request.path %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="Budgets">
-            <i class="bi bi-wallet2"></i>
-            <span class="fw-semibold">Budgets</span>
-        </a>
-    </li>
+  <!-- Messages / Chat Room -->
+  <li class="nav-item">
+    <a
+      href="{% url 'chat_dashboard' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if request.path == '/messages/' %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="Messages"
+    >
+      <i class="bi bi-chat-dots-fill"></i>
+      <span class="fw-semibold">Messages</span>
+    </a>
+  </li>
 
-    <!-- QR Checkin Scanner -->
-    <li class="nav-item">
-        <a href="{% url 'qr_scanner' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if request.path == '/checkin/' %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="QR Scanner">
-            <i class="bi bi-qr-code-scan"></i>
-            <span class="fw-semibold">QR Check-in</span>
-        </a>
-    </li>
-    {% endif %}
+  <!-- AI Assistant -->
+  <li class="nav-item">
+    <a
+      href="{% url 'ai_chat' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if request.path == '/ai-chat/' %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="AI Assistant"
+    >
+      <i class="bi bi-stars"></i>
+      <span class="fw-semibold">AI Assistant</span>
+    </a>
+  </li>
 
-    <li class="px-3 pt-3 pb-1 text-muted small fw-bold text-uppercase sidebar-section-header" style="letter-spacing: 0.05em; font-size: 0.725rem;">System</li>
+  <!-- Contact Support -->
+  <li class="nav-item">
+    <a
+      href="{% url 'contact' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if request.path == '/contact/' %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="Contact Support"
+    >
+      <i class="bi bi-envelope-fill"></i>
+      <span class="fw-semibold">Contact & Support</span>
+    </a>
+  </li>
 
-    <!-- Messages / Chat Room -->
-    <li class="nav-item">
-        <a href="{% url 'chat_dashboard' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if request.path == '/messages/' %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="Messages">
-            <i class="bi bi-chat-dots-fill"></i>
-            <span class="fw-semibold">Messages</span>
-        </a>
-    </li>
-
-    <!-- Contact Support -->
-    <li class="nav-item">
-        <a href="{% url 'contact' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if request.path == '/contact/' %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="Contact Support">
-            <i class="bi bi-envelope-fill"></i>
-            <span class="fw-semibold">Contact & Support</span>
-        </a>
-    </li>
-
-    <!-- Profile & Settings -->
-    <li class="nav-item mb-3">
-        <a href="{% url 'profile' %}" class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if request.path == '/profile/' %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}" data-tooltip="Profile & Settings">
-            <i class="bi bi-person-fill"></i>
-            <span class="fw-semibold">Profile</span>
-        </a>
-    </li>
+  <!-- Profile & Settings -->
+  <li class="nav-item mb-3">
+    <a
+      href="{% url 'profile' %}"
+      class="nav-link text-start rounded-pill py-2 px-3 d-flex align-items-center gap-2 {% if request.path == '/profile/' %}active bg-dark text-white shadow-sm{% else %}text-secondary{% endif %}"
+      data-tooltip="Profile & Settings"
+    >
+      <i class="bi bi-person-fill"></i>
+      <span class="fw-semibold">Profile</span>
+    </a>
+  </li>
 </ul>
-
-
