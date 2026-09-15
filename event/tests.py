@@ -24,7 +24,7 @@ class LoginViewTests(TestCase):
         self.assertTrue(response.wsgi_request.user.is_authenticated)
 
 
-from .models import Category, Event, Message, Venue, Member, Ticket, Vendor, Contract
+from .models import Category, Event, Message, Venue, Member, Ticket, Vendor, Contract, UserProfile
 from .forms import MemberForm
 
 class MemberFormTests(TestCase):
@@ -611,6 +611,27 @@ class Phase3TicketAndAttendeeTests(TestCase):
         self.client.login(username='regularuser', password='Password123')
         response = self.client.get(reverse('qr_scanner'))
         self.assertEqual(response.status_code, 403)
+
+    def test_qr_checkin_allows_organizer_role(self):
+        member = self._create_member("Organizer Member", "organizer-member@example.com")
+        ticket = Ticket.objects.create(member=member, event=self.event)
+
+        organizer = self.User.objects.create_user(
+            username='organizeruser',
+            email='organizer@example.com',
+            password='Password123'
+        )
+        UserProfile.objects.update_or_create(user=organizer, defaults={'role': 'organizer'})
+
+        self.client.login(username='organizeruser', password='Password123')
+        response = self.client.post(
+            reverse('api_checkin'),
+            data=json.dumps({'uuid': str(ticket.uuid)}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['status'], 'success')
 
     def test_attendance_list_requires_staff(self):
         self.client.login(username='regularuser', password='Password123')

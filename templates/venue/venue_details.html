@@ -1,181 +1,413 @@
-{% extends 'base/base.html' %}
-{% load static %}
-
-{% block title %}{{ venue.name }} | Venues | EventSphere{% endblock %}
-
-{% block breadcrumbs %}
-<li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="bi bi-house-door-fill me-1"></i>Home</a></li>
+{% extends 'base/base.html' %} {% load static %} {% block title %}{{ venue.name
+}} | Venues | EventSphere{% endblock %} {% block breadcrumbs %}
+<li class="breadcrumb-item">
+  <a href="{% url 'dashboard' %}"
+    ><i class="bi bi-house-door-fill me-1"></i>Home</a
+  >
+</li>
 <li class="breadcrumb-item"><a href="{% url 'venue_list' %}">Venues</a></li>
 <li class="breadcrumb-item active" aria-current="page">{{ venue.name }}</li>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block extra_css %}
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+/>
+<style>
+  #venue-map {
+    height: 400px;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+</style>
+{% endblock %} {% block content %}
 <!-- Page Header -->
-<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
-    <div>
-        <h1 class="fw-bold tracking-tight text-dark mb-1">{{ venue.name }}</h1>
-        <p class="text-muted mb-0">Venue specifications, timings capacity details, and scheduled events.</p>
-    </div>
-    <div class="d-flex gap-2 flex-wrap">
-        <a href="{% url 'venue_list' %}" class="btn btn-outline-dark rounded-pill px-4 fw-semibold d-flex align-items-center gap-2">
-            <i class="bi bi-arrow-left"></i> Back
-        </a>
-        {% if request.user.is_staff %}
-        <a href="{% url 'edit_venue' venue.id %}" class="btn btn-dark rounded-pill px-4 fw-semibold d-flex align-items-center gap-2">
-            <i class="bi bi-pencil-fill"></i> Edit Venue
-        </a>
-        {% endif %}
-    </div>
+<div
+  class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4"
+>
+  <div>
+    <h1 class="fw-bold tracking-tight text-dark mb-1">{{ venue.name }}</h1>
+    <p class="text-muted mb-0">
+      Venue specifications, timings capacity details, and scheduled events.
+    </p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a
+      href="{% url 'venue_list' %}"
+      class="btn btn-outline-dark rounded-pill px-4 fw-semibold d-flex align-items-center gap-2"
+    >
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+    {% if request.user.is_staff %}
+    <a
+      href="{% url 'edit_venue' venue.id %}"
+      class="btn btn-dark rounded-pill px-4 fw-semibold d-flex align-items-center gap-2"
+    >
+      <i class="bi bi-pencil-fill"></i> Edit Venue
+    </a>
+    {% endif %}
+  </div>
 </div>
 
 <!-- Metric Summary Row -->
 <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-        <div class="rounded-4 p-3 d-flex align-items-center gap-3 bg-white shadow-sm border">
-            <div class="rounded-3 d-flex align-items-center justify-content-center bg-light" style="width:42px;height:42px;flex-shrink:0;">
-                <i class="bi bi-people-fill text-dark fs-5"></i>
-            </div>
-            <div>
-                <div class="text-muted fw-semibold" style="font-size:0.7rem;letter-spacing:.06em;text-transform:uppercase;">Capacity</div>
-                <div class="fw-bold fs-5 text-dark">{{ venue.capacity }}</div>
-            </div>
+  <div class="col-6 col-md-3">
+    <div
+      class="rounded-4 p-3 d-flex align-items-center gap-3 bg-white shadow-sm border"
+    >
+      <div
+        class="rounded-3 d-flex align-items-center justify-content-center bg-light"
+        style="width: 42px; height: 42px; flex-shrink: 0"
+      >
+        <i class="bi bi-people-fill text-dark fs-5"></i>
+      </div>
+      <div>
+        <div
+          class="text-muted fw-semibold"
+          style="
+            font-size: 0.7rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+          "
+        >
+          Capacity
         </div>
+        <div class="fw-bold fs-5 text-dark">{{ venue.capacity }}</div>
+      </div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="rounded-4 p-3 d-flex align-items-center gap-3 bg-white shadow-sm border">
-            <div class="rounded-3 d-flex align-items-center justify-content-center bg-light" style="width:42px;height:42px;flex-shrink:0;">
-                <i class="bi bi-calendar-event-fill text-dark fs-5"></i>
-            </div>
-            <div>
-                <div class="text-muted fw-semibold" style="font-size:0.7rem;letter-spacing:.06em;text-transform:uppercase;">Scheduled Events</div>
-                <div class="fw-bold fs-5 text-dark">{{ associated_events.count }}</div>
-            </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div
+      class="rounded-4 p-3 d-flex align-items-center gap-3 bg-white shadow-sm border"
+    >
+      <div
+        class="rounded-3 d-flex align-items-center justify-content-center bg-light"
+        style="width: 42px; height: 42px; flex-shrink: 0"
+      >
+        <i class="bi bi-calendar-event-fill text-dark fs-5"></i>
+      </div>
+      <div>
+        <div
+          class="text-muted fw-semibold"
+          style="
+            font-size: 0.7rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+          "
+        >
+          Scheduled Events
         </div>
+        <div class="fw-bold fs-5 text-dark">{{ associated_events.count }}</div>
+      </div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="rounded-4 p-3 d-flex align-items-center gap-3 bg-white shadow-sm border">
-            <div class="rounded-3 d-flex align-items-center justify-content-center bg-light" style="width:42px;height:42px;flex-shrink:0;">
-                <i class="bi bi-clock-fill text-dark fs-5"></i>
-            </div>
-            <div>
-                <div class="text-muted fw-semibold" style="font-size:0.7rem;letter-spacing:.06em;text-transform:uppercase;">Available Hours</div>
-                <div class="fw-bold text-dark small">
-                    {% if venue.available_from and venue.available_to %}
-                        {{ venue.available_from|time:"g:i A" }} - {{ venue.available_to|time:"g:i A" }}
-                    {% else %}
-                        All Day
-                    {% endif %}
-                </div>
-            </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div
+      class="rounded-4 p-3 d-flex align-items-center gap-3 bg-white shadow-sm border"
+    >
+      <div
+        class="rounded-3 d-flex align-items-center justify-content-center bg-light"
+        style="width: 42px; height: 42px; flex-shrink: 0"
+      >
+        <i class="bi bi-clock-fill text-dark fs-5"></i>
+      </div>
+      <div>
+        <div
+          class="text-muted fw-semibold"
+          style="
+            font-size: 0.7rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+          "
+        >
+          Available Hours
         </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="rounded-4 p-3 d-flex align-items-center gap-3 bg-white shadow-sm border">
-            <div class="rounded-3 d-flex align-items-center justify-content-center bg-light" style="width:42px;height:42px;flex-shrink:0;">
-                <i class="bi bi-info-circle-fill text-dark fs-5"></i>
-            </div>
-            <div>
-                <div class="text-muted fw-semibold" style="font-size:0.7rem;letter-spacing:.06em;text-transform:uppercase;">Status</div>
-                <div class="fw-bold text-dark small">
-                    {% if venue.status == 'Active' %}
-                        <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Active</span>
-                    {% elif venue.status == 'Maintenance' %}
-                        <span class="text-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>Maintenance</span>
-                    {% else %}
-                        <span class="text-secondary"><i class="bi bi-x-circle-fill me-1"></i>Inactive</span>
-                    {% endif %}
-                </div>
-            </div>
+        <div class="fw-bold text-dark small">
+          {% if venue.available_from and venue.available_to %} {{
+          venue.available_from|time:"g:i A" }} - {{ venue.available_to|time:"g:i
+          A" }} {% else %} All Day {% endif %}
         </div>
+      </div>
     </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div
+      class="rounded-4 p-3 d-flex align-items-center gap-3 bg-white shadow-sm border"
+    >
+      <div
+        class="rounded-3 d-flex align-items-center justify-content-center bg-light"
+        style="width: 42px; height: 42px; flex-shrink: 0"
+      >
+        <i class="bi bi-info-circle-fill text-dark fs-5"></i>
+      </div>
+      <div>
+        <div
+          class="text-muted fw-semibold"
+          style="
+            font-size: 0.7rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+          "
+        >
+          Status
+        </div>
+        <div class="fw-bold text-dark small">
+          {% if venue.status == 'Active' %}
+          <span class="text-success"
+            ><i class="bi bi-check-circle-fill me-1"></i>Active</span
+          >
+          {% elif venue.status == 'Maintenance' %}
+          <span class="text-warning"
+            ><i class="bi bi-exclamation-triangle-fill me-1"></i
+            >Maintenance</span
+          >
+          {% else %}
+          <span class="text-secondary"
+            ><i class="bi bi-x-circle-fill me-1"></i>Inactive</span
+          >
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-
+<!-- Venue Location Map -->
+<div class="card border-0 rounded-4 shadow-sm bg-white overflow-hidden mb-4">
+  <div
+    class="px-4 py-3 border-bottom d-flex align-items-center gap-2"
+    style="background: var(--bg-canvas)"
+  >
+    <i class="bi bi-geo-alt-fill text-primary"></i>
+    <h5 class="fw-bold text-dark mb-0">Venue Location</h5>
+  </div>
+  <div class="p-4">
+    <div id="venue-map"></div>
+    <div class="mt-3 p-3 bg-light rounded-3">
+      <p class="text-muted small mb-0">
+        <i class="bi bi-info-circle me-2"></i>{{ venue.location }}
+      </p>
+    </div>
+  </div>
+</div>
 <!-- Main Content Row -->
 <div class="row g-4 mb-4">
-    <!-- Left: Venue Specs -->
-    <div class="col-lg-4 col-md-5">
-        <div class="card border-0 rounded-4 shadow-sm bg-white overflow-hidden h-100">
-            <!-- Venue Image -->
-            <div style="height: 200px; background: #e5e7eb;">
-                {% if venue.image %}
-                    <img src="{{ venue.image.url }}" class="w-100 h-100 object-fit-cover" alt="{{ venue.name }}">
+  <!-- Left: Venue Specs -->
+  <div class="col-lg-4 col-md-5">
+    <div
+      class="card border-0 rounded-4 shadow-sm bg-white overflow-hidden h-100"
+    >
+      <!-- Venue Image -->
+      <div style="height: 200px; background: #e5e7eb">
+        {% if venue.image %}
+        <img
+          src="{{ venue.image.url }}"
+          class="w-100 h-100 object-fit-cover"
+          alt="{{ venue.name }}"
+        />
+        {% else %}
+        <div
+          class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted"
+        >
+          <i class="bi bi-building fs-1" style="opacity: 0.3"></i>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="p-4">
+        <div class="d-flex flex-column gap-3">
+          <div class="rounded-4 p-3 bg-light border">
+            <div
+              class="text-muted fw-semibold mb-1"
+              style="
+                font-size: 0.7rem;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+              "
+            >
+              <i class="bi bi-people me-1"></i>Maximum Capacity
+            </div>
+            <div class="fw-bold fs-4 text-dark">
+              {{ venue.capacity }}
+              <span class="text-muted fw-normal" style="font-size: 1rem"
+                >seats</span
+              >
+            </div>
+          </div>
+          {% if venue.description %}
+          <div class="rounded-4 p-3 bg-light border">
+            <div
+              class="text-muted fw-semibold mb-1"
+              style="
+                font-size: 0.7rem;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+              "
+            >
+              <i class="bi bi-justify-left me-1"></i>Description
+            </div>
+            <div class="text-dark small" style="line-height: 1.6">
+              {{ venue.description }}
+            </div>
+          </div>
+          {% endif %}
+          <div class="rounded-4 p-3 bg-light border">
+            <div
+              class="text-muted fw-semibold mb-1"
+              style="
+                font-size: 0.7rem;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+              "
+            >
+              <i class="bi bi-stars me-1"></i>Amenities
+            </div>
+            <div class="text-dark small" style="line-height: 1.6">
+              {{ venue.amenities|default:"No amenities specified." }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Scheduled Events -->
+  <div class="col-lg-8 col-md-7">
+    <div
+      class="card border-0 rounded-4 shadow-sm bg-white overflow-hidden h-100"
+    >
+      <div
+        class="px-4 py-3 border-bottom d-flex align-items-center justify-content-between"
+        style="background: var(--bg-canvas)"
+      >
+        <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+          <i class="bi bi-calendar3"></i> Venue Schedule
+          <span class="badge bg-dark text-white rounded-pill ms-1"
+            >{{ associated_events.count }}</span
+          >
+        </h5>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead style="background: var(--bg-canvas)">
+            <tr>
+              <th class="px-4 py-3 fw-semibold text-muted small text-uppercase">
+                Event
+              </th>
+              <th class="py-3 fw-semibold text-muted small text-uppercase">
+                Date
+              </th>
+              <th class="py-3 fw-semibold text-muted small text-uppercase">
+                Time
+              </th>
+              <th class="py-3 fw-semibold text-muted small text-uppercase">
+                Status
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in associated_events %}
+            <tr
+              class="border-bottom-0"
+              style="cursor: pointer"
+              onclick="window.location='{% url 'event_details' event.id %}'"
+            >
+              <td class="px-4 py-3">
+                <div class="fw-bold text-dark">{{ event.name }}</div>
+                <span class="text-muted extra-small"
+                  >{{ event.category.name }}</span
+                >
+              </td>
+              <td class="py-3 text-dark small">
+                {{ event.start_date|date:"b j, Y" }}
+              </td>
+              <td class="py-3 text-muted small">
+                {{ event.start_time|time:"g:i A" }} - {{
+                event.end_time|time:"g:i A" }}
+              </td>
+              <td class="py-3">
+                {% if event.status == 'Active' %}
+                <span
+                  class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-bold extra-small"
+                  >Active</span
+                >
+                {% elif event.status == 'Completed' %}
+                <span
+                  class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-bold extra-small"
+                  >Completed</span
+                >
+                {% elif event.status == 'Pending' %}
+                <span
+                  class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1 fw-bold extra-small"
+                  >Pending</span
+                >
                 {% else %}
-                    <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted">
-                        <i class="bi bi-building fs-1" style="opacity: 0.3;"></i>
-                    </div>
+                <span
+                  class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1 fw-bold extra-small"
+                  >Cancelled</span
+                >
                 {% endif %}
-            </div>
-
-            <div class="p-4">
-                <div class="d-flex flex-column gap-3">
-                    <div class="rounded-4 p-3 bg-light border">
-                        <div class="text-muted fw-semibold mb-1" style="font-size:0.7rem;letter-spacing:.06em;text-transform:uppercase;"><i class="bi bi-people me-1"></i>Maximum Capacity</div>
-                        <div class="fw-bold fs-4 text-dark">{{ venue.capacity }} <span class="text-muted fw-normal" style="font-size:1rem;">seats</span></div>
-                    </div>
-                    {% if venue.description %}
-                    <div class="rounded-4 p-3 bg-light border">
-                        <div class="text-muted fw-semibold mb-1" style="font-size:0.7rem;letter-spacing:.06em;text-transform:uppercase;"><i class="bi bi-justify-left me-1"></i>Description</div>
-                        <div class="text-dark small" style="line-height:1.6;">{{ venue.description }}</div>
-                    </div>
-                    {% endif %}
-                    <div class="rounded-4 p-3 bg-light border">
-                        <div class="text-muted fw-semibold mb-1" style="font-size:0.7rem;letter-spacing:.06em;text-transform:uppercase;"><i class="bi bi-stars me-1"></i>Amenities</div>
-                        <div class="text-dark small" style="line-height:1.6;">{{ venue.amenities|default:"No amenities specified." }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-center py-5 text-muted small">
+                No events scheduled at this location.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
-
-    <!-- Right: Scheduled Events -->
-    <div class="col-lg-8 col-md-7">
-        <div class="card border-0 rounded-4 shadow-sm bg-white overflow-hidden h-100">
-            <div class="px-4 py-3 border-bottom d-flex align-items-center justify-content-between" style="background: var(--bg-canvas);">
-                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                    <i class="bi bi-calendar3"></i> Venue Schedule
-                    <span class="badge bg-dark text-white rounded-pill ms-1">{{ associated_events.count }}</span>
-                </h5>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead style="background: var(--bg-canvas);">
-                        <tr>
-                            <th class="px-4 py-3 fw-semibold text-muted small text-uppercase">Event</th>
-                            <th class="py-3 fw-semibold text-muted small text-uppercase">Date</th>
-                            <th class="py-3 fw-semibold text-muted small text-uppercase">Time</th>
-                            <th class="py-3 fw-semibold text-muted small text-uppercase">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for event in associated_events %}
-                            <tr class="border-bottom-0" style="cursor: pointer;" onclick="window.location='{% url 'event_details' event.id %}'">
-                                <td class="px-4 py-3">
-                                    <div class="fw-bold text-dark">{{ event.name }}</div>
-                                    <span class="text-muted extra-small">{{ event.category.name }}</span>
-                                </td>
-                                <td class="py-3 text-dark small">{{ event.start_date|date:"b j, Y" }}</td>
-                                <td class="py-3 text-muted small">{{ event.start_time|time:"g:i A" }} - {{ event.end_time|time:"g:i A" }}</td>
-                                <td class="py-3">
-                                    {% if event.status == 'Active' %}
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-bold extra-small">Active</span>
-                                    {% elif event.status == 'Completed' %}
-                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-bold extra-small">Completed</span>
-                                    {% elif event.status == 'Pending' %}
-                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1 fw-bold extra-small">Pending</span>
-                                    {% else %}
-                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1 fw-bold extra-small">Cancelled</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-center py-5 text-muted small">No events scheduled at this location.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
-{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+  // Initialize map when page loads
+  document.addEventListener("DOMContentLoaded", function () {
+    const venueLocation = "{{ venue.location }}";
+    const venueName = "{{ venue.name }}";
+
+    // Create map centered at default location
+    const map = L.map("venue-map").setView([20, 0], 2);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+      maxZoom: 19,
+    }).addTo(map);
+
+    // Geocode the venue location using Nominatim
+    fetch(
+      "https://nominatim.openstreetmap.org/search?format=json&q=" +
+        encodeURIComponent(venueLocation),
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lon = parseFloat(data[0].lon);
+
+          // Center map on location
+          map.setView([lat, lon], 15);
+
+          // Add marker
+          L.marker([lat, lon])
+            .addTo(map)
+            .bindPopup("<strong>" + venueName + "</strong><br>" + venueLocation)
+            .openPopup();
+        } else {
+          console.log("Location not found: " + venueLocation);
+          // Add default marker at 0,0 with a message
+          L.marker([20, 0])
+            .addTo(map)
+            .bindPopup(
+              "<strong>" + venueName + "</strong><br>Location not found on map",
+            );
+        }
+      })
+      .catch((error) => console.log("Geocoding error:", error));
+  });
+</script>
+{% endblock %} {% endblock %}

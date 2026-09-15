@@ -40,6 +40,19 @@ def check_export_permission(request):
         return True
     raise PermissionDenied("Access Denied: Only administrators and organizers can export data.")
 
+
+def user_can_access_checkin(request_user):
+    """Return True if a user can scan tickets and manage check-ins."""
+    if request_user.is_staff:
+        return True
+
+    profile = getattr(request_user, 'profile', None)
+    if profile and profile.role in ['admin', 'organizer']:
+        return True
+
+    return Event.objects.filter(organizers=request_user).exists()
+
+
 def write_csv_with_bom(response, headers, rows):
     """
     Writes a CSV spreadsheet including the UTF-8 BOM character for Excel compatibility.
@@ -594,6 +607,22 @@ def event_list(request):
 
 @login_required
 def create_event(request):
+    # Check if user has permission to create events (admin or organizer)
+    if not request.user.is_authenticated:
+        messages.warning(request, "You must be logged in to create an event.")
+        return redirect('login')
+    
+    # Allow admins, staff, and organizers to create events
+    user_profile = getattr(request.user, 'profile', None)
+    can_create = (
+        request.user.is_staff or 
+        (user_profile and user_profile.role in ['admin', 'organizer'])
+    )
+    
+    if not can_create:
+        messages.error(request, "You do not have permission to create events. Please contact an administrator.")
+        return redirect('event_list')
+    
     if request.method == 'POST':
         form = EventForm(request.POST, request.FILES)
         if form.is_valid():
@@ -973,8 +1002,9 @@ def event_self_register(request, pk):
 
 @login_required
 def member_list(request):
-    if not request.user.is_staff:
-        raise PermissionDenied("Only staff members can view the registration list.")
+    # Allow staff and admin users
+    if not (request.user.is_staff or (hasattr(request.user, 'profile') and request.user.profile.role in ['admin', 'organizer'])):
+        raise PermissionDenied("Only staff and administrators can view the registration list.")
     members = Member.objects.all().select_related('event').order_by('-created_at')
     
     # Export Handling
@@ -1368,6 +1398,21 @@ def venue_details(request, pk):
 
 @login_required
 def create_venue(request):
+    # Check if user has permission to create venues (admin/organizer/staff)
+    if not request.user.is_authenticated:
+        messages.warning(request, "You must be logged in to create a venue.")
+        return redirect('login')
+    
+    user_profile = getattr(request.user, 'profile', None)
+    can_create = (
+        request.user.is_staff or 
+        (user_profile and user_profile.role in ['admin', 'organizer'])
+    )
+    
+    if not can_create:
+        messages.error(request, "You do not have permission to create venues. Please contact an administrator.")
+        return redirect('venue_list')
+    
     if request.method == 'POST':
         form = VenueForm(request.POST)
         if form.is_valid():
@@ -1380,8 +1425,13 @@ def create_venue(request):
 
 @login_required
 def edit_venue(request, pk):
-    if not request.user.is_staff:
-        raise PermissionDenied("Only staff members can edit venues.")
+    user_profile = getattr(request.user, 'profile', None)
+    can_edit = (
+        request.user.is_staff or
+        (user_profile and user_profile.role in ['admin', 'organizer'])
+    )
+    if not can_edit:
+        raise PermissionDenied("Only administrators and organizers can edit venues.")
     venue = get_object_or_404(Venue, pk=pk)
     if request.method == 'POST':
         form = VenueForm(request.POST, instance=venue)
@@ -1395,8 +1445,13 @@ def edit_venue(request, pk):
 
 @login_required
 def delete_venue(request, pk):
-    if not request.user.is_staff:
-        raise PermissionDenied("Only staff members can delete venues.")
+    user_profile = getattr(request.user, 'profile', None)
+    can_delete = (
+        request.user.is_staff or
+        (user_profile and user_profile.role in ['admin', 'organizer'])
+    )
+    if not can_delete:
+        raise PermissionDenied("Only administrators and organizers can delete venues.")
     venue = get_object_or_404(Venue, pk=pk)
     if request.method == 'POST':
         venue.is_active = False
@@ -2274,12 +2329,9 @@ def attendance_list(request):
 
 @login_required
 def qr_scanner_view(request):
-    # Only staff or designated organizers can access the scanner
-    user_role = getattr(getattr(request.user, 'profile', None), 'role', 'viewer')
-    if not request.user.is_staff and user_role not in ['admin', 'organizer']:
-        # Check if the user is organizer of at least one event
-        if not Event.objects.filter(organizers=request.user).exists():
-            raise PermissionDenied("Only event coordinators and staff can access the check-in scanner.")
+    # Only staff, admins, organizers, or designated event organizers can access the scanner
+    if not user_can_access_checkin(request.user):
+        raise PermissionDenied("Only event coordinators and staff can access the check-in scanner.")
     return render(request, 'event/qr-scanner.html')
 
 # ==========================================================================
@@ -2289,7 +2341,7 @@ def qr_scanner_view(request):
 @login_required
 def api_register_list(request):
     # REST API listing registrations for organizers
-    if not request.user.is_staff and not Event.objects.filter(organizers=request.user).exists():
+    if not user_can_access_checkin(request.user):
         return JsonResponse({'error': 'Unauthorized'}, status=403)
         
     members = Member.objects.all().order_by('-registration_date')
@@ -2315,10 +2367,9 @@ def api_checkin(request):
     import json
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Only POST method is allowed'}, status=405)
-        
+
     # Permission validation
-    is_staff_or_organizer = request.user.is_staff or Event.objects.filter(organizers=request.user).exists()
-    if not is_staff_or_organizer:
+    if not user_can_access_checkin(request.user):
         return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
         
     try:
@@ -2385,7 +2436,7 @@ def api_checkin(request):
 
 @login_required
 def api_attendance_log(request):
-    if not request.user.is_staff and not Event.objects.filter(organizers=request.user).exists():
+    if not user_can_access_checkin(request.user):
         return JsonResponse({'error': 'Unauthorized'}, status=403)
         
     records = Attendance.objects.all().order_by('-check_in_time')
